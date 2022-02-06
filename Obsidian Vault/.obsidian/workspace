@@ -1,0 +1,112 @@
+{
+  "main": {
+    "id": "5db2ac4bee398fe1",
+    "type": "split",
+    "children": [
+      {
+        "id": "03ebc8945af61766",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "Loss Functions.md",
+            "mode": "source"
+          }
+        },
+        "group": "de5d061e9b97f99b"
+      },
+      {
+        "id": "482bc6d1214beff1",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "Loss Functions.md",
+            "mode": "preview"
+          }
+        },
+        "group": "de5d061e9b97f99b"
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f3bd25cb1dba2fec",
+    "type": "split",
+    "children": [
+      {
+        "id": "9bf54e41dcc5b771",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "da21e56c3c7ae8b4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "a8711a3ba6442d0d",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "c12e49bbe75b5139",
+    "type": "split",
+    "children": [
+      {
+        "id": "5422a8443fe502af",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "773c1974e2f07ec7",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Loss Functions.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "03ebc8945af61766",
+  "lastOpenFiles": [
+    "Loss Functions.md",
+    "Pasted image 20220205175529.png",
+    "Pasted image 20220205174807.png",
+    "Games/Tic-Tac-Toe.md",
+    "Games/Mastermind.md",
+    "Games/Dino Run.md",
+    "Sauce.md"
+  ]
+}
