@@ -6,14 +6,14 @@ from typing import List
 
 class Meeple:
     def __init__(self, braininputs:int, brainoutputs:int, isHollow=False):
-        self.fitness:float;
-        self.unadjustedFitness:float
+        self.fitness:float = 0
+        self.unadjustedFitness:float = 0
         self.vision:List[float] = list()
         self.decision:List[float] = list()
         self.lifespan:int = 0
         self.bestScore:int = 0
-        self.dead:bool
-        self.score:int
+        self.isAlive:bool=True
+        self.score:int=0
         self.generation = 0
         self.brainInputs:int = braininputs
         self.brainOutputs:int = brainoutputs
@@ -29,19 +29,19 @@ class Meeple:
     def update(self)->None:
         return
 
-    def look(self)->None:
+    def look(self, inputValues)->None:
         return
 
-    def think(self)->None:
+    def think(self, vision)->None:
         max:float = 0
         maxIndex:int = 0
 
         self.decision = self.brain.feedForward(vision)
 
-        for deci in range(len(self.decision)):
-            if self.decision[deci] > max:
-                max = self.decision[deci]
-                maxIndex = deci
+        #for deci in range(len(self.decision)):
+        #    if self.decision[deci] > max:
+        #        max = self.decision[deci]
+        #        maxIndex = deci
 
     def clone(self)->Meeple:
         clone:Meeple = Meeple(self.brainInputs, self.brainOutputs)
@@ -53,10 +53,10 @@ class Meeple:
         return clone
 
     def calculateFitness(self)->None:
-        self.fitness = self.score**2
+        self.fitness = self.score
 
     def crossover(self, parent2:Meeple)->Meeple:
         child:Meeple = Meeple(self.brainInputs, self.brainOutputs, True)
-        child.brain = self.brain.crossover(paren2.brain)
+        child.brain = self.brain.crossover(parent2.brain)
         child.brain.generateNetwork()
         return child

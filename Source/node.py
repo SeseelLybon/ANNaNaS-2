@@ -83,10 +83,10 @@ class Connection:
     def mutateWeight(self):
         rand1:float = rng.random()
         if rand1 < 0.1:
-            self.weight = rng.random()*2-1
+            self.weight = rng.uniform(-1,1)
         else:
             self.weight += rng.normal()/50
-            self.weight = Node.ReLU2(self.weight)
+            self.weight = np.min([1, np.max([self.weight, -1])])
 
     def clone(self, fromNode:Node, toNode:Node) -> Connection:
         temp:Connection = Connection(fromNode, toNode, self.weight, self.innovationNumber)

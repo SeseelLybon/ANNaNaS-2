@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-import math
-import numpy as np
-
 from typing import List
-from typing import NoReturn
-from typing import Tuple
 
-from node import Node
-from node import Connection
-import copy
-
+import numpy as np
 from numpy.random import default_rng
+
+from node import Connection
+from node import Node
+
 rng = default_rng()
 
 # NeuralNetwork = Genome
+
+
+nextConnectionID:int = 10
 
 
 class NeuralNetwork:
@@ -30,6 +29,11 @@ class NeuralNetwork:
         self.connections:List[Connection] = list()
         self.nodes:List[Node] = list()
         self.network:List[Node] = list()
+
+        self.mutateChance_AddNode = 0.03
+        self.mutateChance_AddConnection = 0.30
+        self.mutateChance_ChangeWeight = 0.75
+
 
         if not hollow:
             for nodei in range(self.input_size):
@@ -94,15 +98,17 @@ class NeuralNetwork:
             return
 
         # pick a random Connection that isn't with the Bias node, and disable it.
-        randomConnection:int = int(np.floor(rng.random()*len(self.connections)))
+        randomConnection:int = int(rng.integers(0, len(self.connections)))
         while( self.connections[randomConnection].fromNode == self.nodes[self.biasNodeID] ) and (len(self.connections) != 1):
-            randomConnection = int(np.floor(rng.random()*len(self.connections)))
+            randomConnection = int(rng.integers(0, len(self.connections)))
         self.connections[randomConnection].enabled = False
 
         # create the new node
         newNodeNumber:int = self.nextNodeID
         self.nodes.append(Node(newNodeNumber))
         self.nextNodeID+=1
+
+        # add new connection with weight 1 from the old connections fromNode to newNode
         connectionInnovationNumber:int = self.getInnovationNumber(innovationHistory,
                                                                   self.connections[randomConnection].fromNode,
                                                                   self.getNode(newNodeNumber))
@@ -111,14 +117,19 @@ class NeuralNetwork:
                                            1,
                                            connectionInnovationNumber))
 
-        # add a new connection to the new node with a weight of the disabled connection
+        # add a new connection to the new node with the weight of the disabled connection
         connectionInnovationNumber = self.getInnovationNumber(innovationHistory,
-                                                              self.nodes[self.biasNodeID],
-                                                              self.getNode(newNodeNumber))
-        self.connections.append(Connection(self.nodes[self.biasNodeID],
-                                           self.getNode(newNodeNumber),
-                                           0,
+                                                              self.getNode(newNodeNumber),
+                                                              self.connections[randomConnection].toNode)
+        self.connections.append(Connection(self.getNode(newNodeNumber),
+                                           self.connections[randomConnection].toNode,
+                                           self.connections[randomConnection].weight,
                                            connectionInnovationNumber))
+        self.getNode(newNodeNumber).layer = self.connections[randomConnection].fromNode.layer + 1
+
+        # add new connection to the Bias node
+        connectionInnovationNumber = self.getInnovationNumber(innovationHistory, self.getNode(self.biasNodeID), self.getNode(newNodeNumber))
+        self.connections.append(Connection(self.getNode(self.biasNodeID), self.getNode(newNodeNumber) ,0 ,connectionInnovationNumber ) )
 
         # add a new layer if needed
         if self.getNode(newNodeNumber).layer == self.connections[randomConnection].toNode.layer:
@@ -151,7 +162,7 @@ class NeuralNetwork:
             randomNode1 = temp
 
         connectionInnovationNumber:int = self.getInnovationNumber(innovationHistory, self.nodes[randomNode1], self.nodes[randomNode2])
-        self.connections.append( Connection(self.nodes[randomNode1], self.nodes[randomNode2], rng.random()*2-1, connectionInnovationNumber) )
+        self.connections.append( Connection(self.nodes[randomNode1], self.nodes[randomNode2], rng.uniform(-1,1), connectionInnovationNumber) )
         self.connectNodes()
 
 
@@ -163,11 +174,12 @@ class NeuralNetwork:
         return False
 
     def getInnovationNumber(self, innovationHistory:List[ConnectionHistory], fromNode:Node, toNode:Node)->int:
+        global nextConnectionID
         isNew:bool = True
-        connectionInnovationNumber:int = self.nextConnectionID
+        connectionInnovationNumber:int = nextConnectionID
         for innoi in range(len(innovationHistory)):
             if innovationHistory[innoi].matches(self, fromNode, toNode):
-                isNew = False
+                isNew = False # Not a new mutation
                 connectionInnovationNumber = innovationHistory[innoi].innovationNumber
                 break
 
@@ -177,7 +189,7 @@ class NeuralNetwork:
                 innoNumbers.append(self.connections[conni].innovationNumber)
 
             innovationHistory.append(ConnectionHistory(fromNode.ID, toNode.ID, connectionInnovationNumber, innoNumbers))
-            self.nextConnectionID+=1
+            nextConnectionID+=1
 
         return connectionInnovationNumber
 
@@ -205,16 +217,16 @@ class NeuralNetwork:
             self.addConnection(innovationHistory)
 
         rand1:float = rng.random()
-        if rand1 < 0.8:
+        if rand1 < self.mutateChance_ChangeWeight:
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()
 
         rand2:float = rng.random()
-        if rand2 < 0.08:
+        if rand2 < self.mutateChance_AddConnection:
             self.addConnection(innovationHistory)
 
         rand3: float = rng.random()
-        if rand3 < 0.02:
+        if rand3 < self.mutateChance_AddNode:
             self.addNode(innovationHistory)
 
     def crossover(self, parent2:NeuralNetwork) -> NeuralNetwork:
@@ -233,13 +245,13 @@ class NeuralNetwork:
             parent2connection:int = self.matchingConnection(parent2, self.connections[conni].innovationNumber)
             if parent2connection != -1:
                 if (not self.connections[conni].enabled) or (not parent2.connections[parent2connection].enabled):
-                    if rng.random() < 0.75:
+                    if rng.uniform() < 0.75:
                         setEnabled= False
-                if rng.random() <0.5:
+                if rng.uniform() <0.5:
                     childConnections.append(self.connections[conni])
                 else:
                     childConnections.append(parent2.connections[parent2connection])
-            else:
+            else: # if they are the same
                 childConnections.append(self.connections[conni])
                 setEnabled = self.connections[conni].enabled
             isEnabled.append(setEnabled)
@@ -258,8 +270,7 @@ class NeuralNetwork:
     def matchingConnection(self, parent2:NeuralNetwork, innovationNumber:int)->int:
         for conni in range(len(parent2.connections)):
             if parent2.connections[conni].innovationNumber == innovationNumber:
-                return conni;
-
+                return conni
         return -1
 
     def clone(self) -> NeuralNetwork:
@@ -268,10 +279,10 @@ class NeuralNetwork:
             clone.nodes.append(self.nodes[nodei].clone())
 
         for conni in range(len(self.connections)):
-            clone.connections.append(self.connections[conni].clone(clone.getNode(self.connections[conni].fromNode.ID,
-                                                                   clone.getNode(self.connections[conni].toNode.ID))))
+            clone.connections.append(self.connections[conni].clone(clone.getNode(self.connections[conni].fromNode.ID),
+                                                                   clone.getNode(self.connections[conni].toNode.ID)))
 
-        clone.layers = self.layers_total
+        clone.layers_total = self.layers_total
         clone.nextNodeID = self.nextNodeID
         clone.biasNodeID = self.biasNodeID
         clone.connectNodes()
@@ -337,8 +348,6 @@ class ConnectionHistory:
 
 if __name__ == "__main__":
 
-    import timeit
-    import cProfile
     print("Starting neuralnetwork.py as main")
 
     #p = cProfile.Profile()
@@ -346,33 +355,37 @@ if __name__ == "__main__":
     #p.runcall(oldbrain.fire_network)
     #p.print_stats()
 
-    innovationHistory:List[ConnectionHistory] = list()
+    '''
+    doonce = False
+    if doonce:
+        innovationHistory:List[ConnectionHistory] = list()
 
 
-    ANN1 = NeuralNetwork(7, 3)
-    ANN1.generateNetwork()
-    print("Made ANN1")
-    output = ANN1.feedForward([1,2,3,4,5,6,7])
-    print("ANN1 feedForward", output)
-    ANN1.printNetwork()
-    print("Mutating")
-    for dummy in range(10):
-        ANN1.mutate(innovationHistory)
-    ANN1.printNetwork()
-    ANN1.generateNetwork()
+        ANN1 = NeuralNetwork(7, 3)
+        ANN1.generateNetwork()
+        print("Made ANN1")
+        output = ANN1.feedForward([1,2,3,4,5,6,7])
+        print("ANN1 feedForward", output)
+        ANN1.printNetwork()
+        print("Mutating")
+        for dummy in range(10):
+            ANN1.mutate(innovationHistory)
+        ANN1.printNetwork()
+        ANN1.generateNetwork()
 
-    output = ANN1.feedForward([1,2,3,4,5,6,7])
-    print(output)
-    print("ANN1 Mutated feedForward",output)
+        output = ANN1.feedForward([1,2,3,4,5,6,7])
+        print(output)
+        print("ANN1 Mutated feedForward",output)
 
-    print("Mutating")
-    for dummy in range(10):
-        ANN1.mutate(innovationHistory)
-    ANN1.printNetwork()
-    ANN1.generateNetwork()
+        print("Mutating")
+        for dummy in range(10):
+            ANN1.mutate(innovationHistory)
+        ANN1.printNetwork()
+        ANN1.generateNetwork()
 
-    output = ANN1.feedForward([1,2,3,4,5,6,7])
-    print(output)
-    print("ANN1 Mutated feedForward",output)
+        output = ANN1.feedForward([1,2,3,4,5,6,7])
+        print(output)
+        print("ANN1 Mutated feedForward",output)
+    '''
 
     print("Finished neuralnetwork.py as main")
