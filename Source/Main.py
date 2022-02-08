@@ -50,8 +50,6 @@ def update(dt):
     for players in combinations(list(range(popcap)), 2):
         endgamestate = pre_game(players)
 
-
-
         if endgamestate[2] == 1: # if player 1/X won
             if bestMatch is None: # if there's no best match, this wins
                 bestMatch = [players, endgamestate]
@@ -59,6 +57,8 @@ def update(dt):
                 if bestMatch[1][1] < endgamestate[1]:
                     bestMatch = [players, endgamestate]
             elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
+                bestMatch = [players, endgamestate]
+            elif bestMatch[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
                 bestMatch = [players, endgamestate]
             elif bestMatch[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
                 bestMatch = [players, endgamestate]
@@ -100,13 +100,15 @@ def pre_game(players):
     if endgamestate[0] == "Winner":
         if endgamestate[2] == 1:
             meep1.score += 8000
+            meep2.score += np.max([endgamestate[1]-1, 0])
         elif endgamestate[2] == 2:
-            meep1.score += 8000
+            meep2.score += 8000
+            meep1.score += np.max([endgamestate[1]-1, 0])
         return endgamestate
     if endgamestate[0] == "Draw":
         # on a draw, give half points
-        meep1.score += 4000
-        meep2.score += 4000
+        meep1.score += 4000+8
+        meep2.score += 4000+8
         return endgamestate
     elif endgamestate[0] == "Foul":
         if endgamestate[2] == 1: # 2 caused the foul so gains less points

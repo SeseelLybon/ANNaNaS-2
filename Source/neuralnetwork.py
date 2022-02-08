@@ -152,7 +152,7 @@ class NeuralNetwork:
         randomNode1:int = int(np.floor(rng.integers(0, len(self.nodes))))
         randomNode2:int = int(np.floor(rng.integers(0, len(self.nodes))))
 
-        while self.randomConnectionNodesAreBorked(randomNode1, randomNode2):
+        while self.checkValidityConnection(randomNode1, randomNode2):
             randomNode1 = int(np.floor(rng.integers(0, len(self.nodes))))
             randomNode2 = int(np.floor(rng.integers(0, len(self.nodes))))
 
@@ -166,7 +166,7 @@ class NeuralNetwork:
         self.connectNodes()
 
 
-    def randomConnectionNodesAreBorked(self, r1:int, r2:int) -> bool:
+    def checkValidityConnection(self, r1:int, r2:int) -> bool:
         if self.nodes[r1].layer == self.nodes[r2].layer:
             return True
         if self.nodes[r1].isConnectedTo(self.nodes[r2]):
@@ -216,16 +216,16 @@ class NeuralNetwork:
         if len(self.connections) == 0:
             self.addConnection(innovationHistory)
 
-        rand1:float = rng.random()
+        rand1:float = rng.uniform()
         if rand1 < self.mutateChance_ChangeWeight:
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()
 
-        rand2:float = rng.random()
+        rand2:float = rng.uniform()
         if rand2 < self.mutateChance_AddConnection:
             self.addConnection(innovationHistory)
 
-        rand3: float = rng.random()
+        rand3: float = rng.uniform()
         if rand3 < self.mutateChance_AddNode:
             self.addNode(innovationHistory)
 
