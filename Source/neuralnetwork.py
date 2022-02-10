@@ -23,8 +23,14 @@ rng = default_rng()
 nextConnectionID:int = 10
 nextNeuralNetworkID:int = 10
 
+import colorlog
+import structlog
 import logging
-logging.basicConfig(level=logging.WARNING)
+handler = colorlog.StreamHandler()
+handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+logger = colorlog.getLogger('neuralnetwork')
+logger.addHandler(handler)
+logger.setLevel(logging.WARNING)
 
 class NeuralNetwork:
 
@@ -90,7 +96,7 @@ class NeuralNetwork:
 
 
         for nodei in range(len(self.network)):
-            self.network[nodei].fire()
+            self.network[nodei].fire(self.layers_amount)
 
         outputValues:List[float] = list()
         for outi in range(self.input_size, self.input_size+self.output_size):
@@ -116,7 +122,7 @@ class NeuralNetwork:
             self.addConnection(innovationHistory)
             return
 
-        logging.debug("Adding new Node")
+        logger.debug("Adding new Node")
 
         # pick a random Connection that isn't with the Bias node, and disable it.
         rnglist =  list(range(len(self.connections)))
@@ -170,7 +176,7 @@ class NeuralNetwork:
 
         self.connectNodes()
 
-        logging.debug("Adding new Node")
+        logger.debug("Added new Node")
 
 
 
@@ -180,14 +186,18 @@ class NeuralNetwork:
         if self.isFullyConnected():
             #print("addConnection failed, can't add new connection to filled network")
             return
-        logging.debug("Adding new Connection")
+        logger.debug("Adding new Connection")
 
         randomNode1:int = int(np.floor(rng.integers(0, len(self.nodes))))
         randomNode2:int = int(np.floor(rng.integers(0, len(self.nodes))))
 
-        while self.checkValidityConnection(randomNode1, randomNode2):
+
+
+        while self.checkIfConnected(randomNode1, randomNode2):
             randomNode1 = int(np.floor(rng.integers(0, len(self.nodes))))
             randomNode2 = int(np.floor(rng.integers(0, len(self.nodes))))
+
+        logger.debug("%s, %s : these meeps were considered non-duplicate" % (randomNode1, randomNode2))
 
         if self.nodes[randomNode1].layer > self.nodes[randomNode2].layer:
             temp:int = randomNode2
@@ -198,11 +208,15 @@ class NeuralNetwork:
         self.connections.append( Connection(self.nodes[randomNode1], self.nodes[randomNode2], rng.uniform(-1,1), connectionInnovationNumber) )
         self.connectNodes()
 
+        logger.debug("Added new Connection")
 
-    def checkValidityConnection(self, r1:int, r2:int) -> bool:
+
+    def checkIfConnected(self, r1:int, r2:int) -> bool:
         if self.nodes[r1].layer == self.nodes[r2].layer:
             return True
         if self.nodes[r1].isConnectedTo(self.nodes[r2]):
+            return True
+        if self.nodes[r2].isConnectedTo(self.nodes[r1]):
             return True
         return False
 
@@ -248,7 +262,9 @@ class NeuralNetwork:
             return False
 
     def mutate(self, innovationHistory:List[ConnectionHistory])->None:
+        logger.debug("Mutating")
         if len(self.connections) == 0:
+            logger.debug("No connections to mutate, adding new connection")
             self.addConnection(innovationHistory)
 
         roll = rng.uniform()
@@ -257,17 +273,29 @@ class NeuralNetwork:
         #   Idea is that if the network is activated back-to-back without being reset, it's able to use these
         #   connections to pass info on to the 'future'
         #   AKA a form of memory.
-        if rng.uniform() > 0.001: #rand4 < self.mutateChance_AddConnection:
+        if roll < 0.01: #rand4 < self.mutateChance_AddConnection:
+            logger.debug("RNG: Pretending to add new recurrent connection")
             #self.addConnectionRecurrent(innovationHistory)
             pass
 
-        if rng.uniform() > 0.03:
+        elif roll < 0.10:
+            logger.debug("RNG: Add new node")
+            prenoduples = getDuplicateConnections(self)
             self.addNode(innovationHistory)
+            if len(getDuplicateConnections(self)) != len(prenoduples):
+                logger.fatal("Adding Node caused duplicate")
+                printDuplicateConnections(self)
 
-        if rng.uniform() > 0.08:
+        elif roll < 0.20:
+            logger.debug("RNG: Add new connection")
+            prenoduples = getDuplicateConnections(self)
             self.addConnection(innovationHistory)
+            if len(getDuplicateConnections(self)) != len(prenoduples):
+                logger.fatal("Adding Connection caused duplicate")
+                printDuplicateConnections(self)
 
-        if rng.uniform() > 0.75:
+        elif roll < 0.75:
+            logger.debug("RNG: Mutate weights")
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()
 
@@ -375,8 +403,16 @@ class NeuralNetwork:
             x:int = int(startX+((layeri)*width)/
                         (self.layers_amount + 1.0))
             for nodei in range(len(allNodes[layeri])):
-                y:int = int(startY + ((nodei)*height)/
-                            (len(allNodes[layeri])+1))
+
+                if layeri%2==1 and not layeri == self.layers_amount:
+                    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1)+
+                                          (height/2)/(len(allNodes[layeri])+1)))
+                else:
+                    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1))
+
+
+
+                            )
                 nodePoses.append(Vec2d(x, y))
                 nodeNumbers.append(allNodes[layeri][nodei].ID)
 
@@ -455,17 +491,26 @@ class ConnectionHistory:
                         return False
                 return True
         return False
-    '''
-    def matches(self, neuralnetwork:NeuralNetwork, fromNode:Node, toNode:Node) -> bool:
-        if fromNode.ID == self.fromNode and toNode.ID == self.toNode:
-            return True
-        return False
-    '''
+
+def getDuplicateConnections(neuralnetwork:NeuralNetwork):
+    existingConnections = []
+    duplicateConnections = []
+    for connection in neuralnetwork.connections:
+        if (connection.fromNode.ID, connection.toNode.ID) in existingConnections:
+            duplicateConnections.append((connection.fromNode.ID, connection.toNode.ID))
+        else:
+            existingConnections.append((connection.fromNode.ID, connection.toNode.ID))
+    return duplicateConnections
+
+def printDuplicateConnections(neuralnetwork:NeuralNetwork):
+    duplicateconnections = getDuplicateConnections(neuralnetwork)
+    logger.fatal(duplicateconnections)
+
 
 
 if __name__ == "__main__":
 
-    print("Starting neuralnetwork.py as main")
+    logger.info("Starting neuralnetwork.py as main")
 
     #p = cProfile.Profile()
     #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
@@ -477,26 +522,33 @@ if __name__ == "__main__":
     if doonce:
         innovationHistory:List[ConnectionHistory] = list()
 
+        logger.setLevel(logging.WARNING)
 
-        ANN1 = NeuralNetwork(7, 3)
+        ANN1 = NeuralNetwork(9, 9)
         ANN1.generateNetwork()
-        print("Made ANN1")
-        output = ANN1.feedForward([1,2,3,4,5,6,7])
-        print("ANN1 feedForward", output)
+        logger.info("Made ANN1")
+        output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
+        logger.info("ANN1 feedForward: %s" % output)
         #ANN1.printNetwork()
-        print("Mutating")
         for dummy in range(100):
+        #while len(getDuplicateConnections(ANN1)) == 0:
+        #    logger.info("Mutating")
             ANN1.mutate(innovationHistory)
-        ANN1.printNetwork()
+            #printDuplicateConnections(ANN1)
+        #ANN1.printNetwork()
 
-        existingConnections = []
-        for conni in ANN1.connections:
-            for conne in existingConnections:
-                if conni.fromNode.ID == conne.fromNode.ID and conni.toNode.ID == conne.toNode.ID:
-                    print(conni.toNode.ID, conni.fromNode.ID)
-                    existingConnections.append( conne )
-                    break
-        print(existingConnections)
+    def update(dt):
+        window.clear()
+        ANN1.drawNetwork(50,50,1150,750)
 
 
-    print("Finished neuralnetwork.py as main")
+    todrawnetwork = True
+    if todrawnetwork:
+        window = pyglet.window.Window(1200,800)
+        pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+        window.clear()
+
+        pyglet.clock.schedule_interval_soft(update, 1)
+        pyglet.app.run()
+
+    logger.info("Finished neuralnetwork.py as main")

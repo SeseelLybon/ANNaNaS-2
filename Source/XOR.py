@@ -1,6 +1,15 @@
 # Code stolen from, I mean inspired by CodeBullet, as per usual
 import multiprocessing
 
+import colorlog
+import structlog
+import logging
+handler = colorlog.StreamHandler()
+handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+logger = colorlog.getLogger('XOR')
+logger.addHandler(handler)
+logger.setLevel(logging.WARNING)
+
 import numpy as np
 from numpy.random import default_rng
 rng = default_rng()
@@ -25,7 +34,6 @@ pop = Population(popcap, 2, 1)
 
 # [ x/bool, o/bool, 2:10 = board ]
 
-curgame = 0
 steps = 20
 maxgames = len(pop.pop)
 gamestep = maxgames//steps
@@ -39,7 +47,6 @@ genlabel = pyglet.text.Label('23423423',
                           color=(0,0,0, 255))
 
 def update(dt):
-    global curgame
     global steps
     global pop
     global gamestep
@@ -49,64 +56,80 @@ def update(dt):
     print("New generation: ", pop.generation)
     # each update is a generation
 
-    curgames = 0
+    curgame = 0
 
     for dummy in range(steps//5):
         print("    -",end="")
     for dummy in range((steps%5)-1):
         print(" ", end="")
     print("|", maxgames, "/", gamestep, "/", steps)
+    curgame+=1
+
+    expected = [[0],[1],[1],[0]]
 
     for player in pop.pop:
+        curgame+=1
+        if curgame%gamestep==0:
+            print("=",end="")
 
         player.think(vision=[0,0])
         decision = player.decision
-        total= 1/((decision[0] - 0)**2+1)
+        total= getFitness(decision,expected[0])
 
         player.think(vision=[1,0])
         decision = player.decision
-        total+= 1/((decision[0] - 1)**2+1)
+        total+= getFitness(decision,expected[1])
 
         player.think(vision=[0,1])
         decision = player.decision
-        total+= 1/((decision[0] - 1)**2+1)
+        total+= getFitness(decision,expected[2])
 
         player.think(vision=[1,1])
         decision = player.decision
-        total+= 1/((decision[0] - 0)**2+1)
+        total+= getFitness(decision,expected[3])
 
-        player.score = 1/total
+        player.score = total
         continue
 
     bestMeep:Meeple = None
     for meep in pop.pop:
         if bestMeep is None or meep.score > bestMeep.score:
             bestMeep = meep
-
+    print()
     bestMeep.think(vision=[0,0])
     decision = bestMeep.decision
-    print( decision, 1/((decision[0] - 0)**2+1))
+    print( "Expected %s, Got %.4f, Score %f" % (expected[0], decision[0], getFitness(decision,expected[0]) ) )
 
     bestMeep.think(vision=[1,0])
     decision = bestMeep.decision
-    print( decision, 1/((decision[0] - 1)**2+1))
+    print( "Expected %s, Got %.4f, Score %s" % (expected[1], decision[0], getFitness(decision,expected[1]) ) )
 
     bestMeep.think(vision=[0,1])
     decision = bestMeep.decision
-    print( decision, 1/((decision[0] - 1)**2+1))
+    print( "Expected %s, Got %.4f, Score %s" % (expected[2], decision[0], getFitness(decision,expected[2]) ) )
 
     bestMeep.think(vision=[1,1])
     decision = bestMeep.decision
-    print( decision, 1/((decision[0] - 1)**2+1))
+    print( "Expected %s, Got %.4f, Score %s" % (expected[3], decision[0], getFitness(decision,expected[3]) ) )
 
     window.clear()
     bestMeep.brain.drawNetwork(50,50,1150,750)
     genlabel.text = "Generation: "+ str(pop.generation)
     genlabel.draw()
 
-    bestMeep.brain.printNetwork()
+    # bestMeep.brain.printNetwork()
+    #if (bestMeep.score/400)>0.9999:
+    if bestMeep.score == 400:
+        logger.fatal("Meep solved problem")
+        pyglet.clock.unschedule(update)
 
     pop.naturalSelection()
+
+def getFitness(decision:List[float], expected:List[float]):
+    runningSum = 0
+    for i in range(len(decision)):
+        runningSum += 100/((decision[i] - expected[i])**2+1)
+    return runningSum
 
 
 if __name__ == "__main__":
@@ -120,7 +143,7 @@ if __name__ == "__main__":
     #p.runcall(oldbrain.fire_network)
     #p.print_stats()
 
-    pyglet.clock.schedule_interval_soft(update, 5)
+    pyglet.clock.schedule_interval_soft(update, 1)
     pyglet.app.run()
 
     #meep1 = Meeple(9,9)

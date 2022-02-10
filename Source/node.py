@@ -22,9 +22,11 @@ class Node:
     def __repr__(self):
         return str(self.ID)
 
-    def fire(self) -> None:
-        if self.layer != 0:
+    def fire(self, maxLayer:int) -> None:
+        if self.layer == maxLayer:
             self.outputValue = self.ReLU1(self.inputSum)
+        if self.layer != 0:
+            self.outputValue = self.ReLU2(self.inputSum)
 
         for coni in range(len(self.outputConnections)):
             if self.outputConnections[coni].enabled:
@@ -57,7 +59,6 @@ class Node:
     @staticmethod
     def Sigmoid(x: float) -> float:
         return 1 / (1 + math.e ** -x)
-
     @staticmethod
     def ReLU1(x: float) -> float:
         return np.max([0, x])
@@ -88,11 +89,12 @@ class Connection:
 
     def mutateWeight(self):
         rand1:float = rng.random()
-        if rand1 < 0.1:
-            self.weight = rng.uniform(-1,1)
-        else:
+        if rand1 < .1: # 10% chance to drastically change the weight
+            #self.weight = rng.uniform(-1,1)
+            self.weight = rng.normal()
+        elif rand1 < .9: # 90% chance to slightly change the weight should make it more stable
             self.weight += rng.normal()/50
-            self.weight = np.min([1, np.max([self.weight, -1])])
+            #self.weight = np.min([1, np.max([self.weight, -1])])
 
     def clone(self, fromNode:Node, toNode:Node) -> Connection:
         temp:Connection = Connection(fromNode, toNode, self.weight, self.innovationNumber)
