@@ -6,6 +6,7 @@ from typing import List
 
 class Meeple:
     def __init__(self, braininputs:int, brainoutputs:int, isHollow=False):
+        self.score:int=0
         self.fitness:float = 0
         self.unadjustedFitness:float = 0
         self.vision:List[float] = list()
@@ -13,7 +14,6 @@ class Meeple:
         self.lifespan:int = 0
         self.bestScore:int = 0
         self.isAlive:bool=True
-        self.score:int=0
         self.generation = 0
         self.brainInputs:int = braininputs
         self.brainOutputs:int = brainoutputs
@@ -53,7 +53,7 @@ class Meeple:
         return clone
 
     def calculateFitness(self)->None:
-        self.fitness = self.score
+        self.fitness = self.score*2
 
     def crossover(self, parent2:Meeple)->Meeple:
         child:Meeple = Meeple(self.brainInputs, self.brainOutputs, True)

@@ -96,7 +96,18 @@ class Population:
         species_pre_speciate = len(self.species)
         self.speciate()  # seperate the existing population into species for the purpose of natural selection
 
-        # fish out any species with no meeples
+        id_s = []
+        for spec in self.species:
+            # Specie's ID
+            # Amount of meeps in Specie
+            # How stale Specie is
+            # Highest fitness in Specie
+            # Average fitness of Specie
+            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,spec.bestFitness, spec.averageFitness))
+        id_s.sort(key=lambda x: x[3])
+        id_s.reverse()
+        id_s[:] = id_s[:50]
+        print(deltaTimeS(last_time), "s- Species", self.size, sum([len(x.meeples) for x in self.species]), id_s )
 
         species_pre_cull = len(self.species)
         print(deltaTimeS(last_time), "s - Sorting Species")
@@ -157,18 +168,6 @@ class Population:
         self.pop = np.array(children, dtype=Meeple)
         self.generation += 1
 
-        id_s = []
-        for spec in self.species:
-            # Specie's ID
-            # Amount of meeps in Specie
-            # How stale Specie is
-            # Highest fitness in Specie
-            # Average fitness of Specie
-            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,spec.bestFitness, spec.averageFitness))
-        id_s.sort(key=lambda x: x[3])
-        id_s.reverse()
-        id_s[:] = id_s[:50]
-        print(deltaTimeS(last_time), "s- Species ID's", id_s )
 
         for meep in self.pop:
             meep.brain.generateNetwork()
@@ -213,7 +212,8 @@ class Population:
         prekill = len(self.species)
 
         # protect 2 fittest species from staleness, then add rest of not stale species.
-        self.species[:] = self.species[:2] + [ specie for specie in self.species[2:] if specie.staleness < self.maxStaleness]
+        #self.species[:] = self.species[0:2] + [ specie for specie in self.species[2:] if specie.staleness < self.maxStaleness]
+        self.species[:] = [ specie for specie in self.species if specie.staleness < self.maxStaleness]
 
         if prekill-len(self.species) > 0:
             print("Killing", prekill-len(self.species), "stale species")
@@ -227,7 +227,9 @@ class Population:
         self.species[:] = [ specie for specie in self.species if len(specie.meeples) > 0 ]
 
         for specie in self.species:
-            specie.fitnessSharing()
+            #specie.fitnessSharing()
+            specie.fitnessSharing_alt()
+            #specie.fitnessSharing_book()
             specie.setAverageFitness()
 
         averageSum = self.getAverageFitnessSum()

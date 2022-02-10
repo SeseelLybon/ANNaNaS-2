@@ -25,8 +25,8 @@ class Species:
         self.bestFitness = 0
 
         self.exceesCoeff:float = 1
-        self.weightDiffCoeff:float = 0.5
-        self.compatibilityThreshold:float = 3
+        self.weightDiffCoeff:float = 1
+        self.compatibilityThreshold:float = 4
 
 
 
@@ -93,7 +93,7 @@ class Species:
         else:
             self.staleness+=1
 
-    def generateChild(self,innovationHistory:List[ConnectionHistory])->Meeple:
+    def generateChild(self, innovationHistory:List[ConnectionHistory])->Meeple:
         child:Meeple=None
 
         if rng.uniform() < 0.25:
@@ -176,7 +176,7 @@ class Species:
                 distance = self.checkSameSpecies(meepi, meepj)
                 if distance <= self.compatibilityThreshold:
                     distanceSum += 1
-            meepi.fitness = meepi.fitness/distanceSum
+            meepi.fitness = meepi.fitness/max( [distanceSum, 1])
 
 
 

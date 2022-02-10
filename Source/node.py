@@ -19,9 +19,12 @@ class Node:
         self.outputConnections:List[Connection] = list()
         self.layer:int = 0
 
+    def __repr__(self):
+        return str(self.ID)
+
     def fire(self) -> None:
         if self.layer != 0:
-            self.outputValue = self.Sigmoid(self.inputSum)
+            self.outputValue = self.ReLU1(self.inputSum)
 
         for coni in range(len(self.outputConnections)):
             if self.outputConnections[coni].enabled:
@@ -57,7 +60,7 @@ class Node:
 
     @staticmethod
     def ReLU1(x: float) -> float:
-        return np.max(0, x)
+        return np.max([0, x])
     @staticmethod
     def ReLU2(x: float) -> float:
         return np.max([0, np.min([x, 1])])
@@ -79,6 +82,9 @@ class Connection:
         self.innovationNumber:int = innovationNo
 
         self.enabled:bool = True
+
+    def __repr__(self):
+        return str(self.innovationNumber)
 
     def mutateWeight(self):
         rand1:float = rng.random()

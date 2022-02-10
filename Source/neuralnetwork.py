@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+
 from typing import List
 
+import math
 import numpy as np
 from numpy.random import default_rng
 
 from node import Connection
 from node import Node
+
+from pymunk import Vec2d
+
+import pyglet
+from pyglet.gl import *
 
 rng = default_rng()
 
@@ -14,25 +21,30 @@ rng = default_rng()
 
 
 nextConnectionID:int = 10
+nextNeuralNetworkID:int = 10
 
+import logging
+logging.basicConfig(level=logging.WARNING)
 
 class NeuralNetwork:
 
-    def __init__(self, input_size:int, output_size:int, hollow:bool=False):
+    def __init__(self, input_size:int, output_size:int, ID:int=-1, hollow:bool=False):
+        global nextNeuralNetworkID
         self.input_size:int = input_size
-        self.layers_total:int = 2
+        self.layers_amount:int = 2
         self.output_size:int = output_size
         self.nextNodeID:int = 0
-        self.nextConnectionID:int = 0
         self.biasNodeID:int
+        if ID == -1:
+            self.ID = nextNeuralNetworkID
+            nextNeuralNetworkID+=1
+        else:
+            self.ID = ID
 
         self.connections:List[Connection] = list()
         self.nodes:List[Node] = list()
         self.network:List[Node] = list()
 
-        self.mutateChance_AddNode = 0.03
-        self.mutateChance_AddConnection = 0.30
-        self.mutateChance_ChangeWeight = 0.75
 
 
         if not hollow:
@@ -45,6 +57,10 @@ class NeuralNetwork:
                 self.nodes.append(Node(nodei))
                 self.nodes[nodei].layer = 1
                 self.nextNodeID += 1
+
+            # Connect all inputs to outputs
+            #for nodei in range(self.input_size):
+            #    self.addConnection()
 
             self.nodes.append(Node(self.nextNodeID))
             self.biasNodeID = self.nextNodeID
@@ -65,10 +81,13 @@ class NeuralNetwork:
         for conni in range(len(self.connections)):
             self.connections[conni].fromNode.outputConnections.append(self.connections[conni])
 
-    def feedForward(self, inputValues:List[float]) -> List[float]:
+    def feedForward(self, vision:List[float], postClean=True) -> List[float]:
+
+        # Set input nodes with vision vector
         for nodei in range(self.input_size):
-            self.nodes[nodei].outputValue=inputValues[nodei]
+            self.nodes[nodei].outputValue=vision[nodei]
         self.nodes[self.biasNodeID].outputValue = 1
+
 
         for nodei in range(len(self.network)):
             self.network[nodei].fire()
@@ -86,7 +105,7 @@ class NeuralNetwork:
         self.connectNodes()
         self.network = list()
 
-        for layeri in range(self.layers_total):
+        for layeri in range(self.layers_amount):
             for nodei in range(len(self.nodes)):
                 if self.nodes[nodei].layer == layeri:
                     self.network.append(self.nodes[nodei])
@@ -97,11 +116,22 @@ class NeuralNetwork:
             self.addConnection(innovationHistory)
             return
 
+        logging.debug("Adding new Node")
+
         # pick a random Connection that isn't with the Bias node, and disable it.
-        randomConnection:int = int(rng.integers(0, len(self.connections)))
-        while( self.connections[randomConnection].fromNode == self.nodes[self.biasNodeID] ) and (len(self.connections) != 1):
-            randomConnection = int(rng.integers(0, len(self.connections)))
-        self.connections[randomConnection].enabled = False
+        rnglist =  list(range(len(self.connections)))
+        rng.shuffle(rnglist)
+        randomConnection = None
+        for rngcon in rnglist:
+            if self.connections[rngcon].fromNode != self.nodes[self.biasNodeID]:
+                self.connections[rngcon].enabled = False
+                randomConnection = rngcon
+                break
+
+        # there's no available connection, might as well add one
+        if randomConnection is None:
+            self.addConnection(innovationHistory)
+            return
 
         # create the new node
         newNodeNumber:int = self.nextNodeID
@@ -136,9 +166,11 @@ class NeuralNetwork:
             for nodei in range(len(self.nodes)-1):
                 if self.nodes[nodei].layer >= self.getNode(newNodeNumber).layer:
                     self.nodes[nodei].layer+=1
-            self.layers_total+=1
+            self.layers_amount+=1
 
         self.connectNodes()
+
+        logging.debug("Adding new Node")
 
 
 
@@ -146,8 +178,9 @@ class NeuralNetwork:
 
     def addConnection(self, innovationHistory:List[ConnectionHistory]) -> None:
         if self.isFullyConnected():
-            print("addConnection failed, can't add new connection to filled network")
+            #print("addConnection failed, can't add new connection to filled network")
             return
+        logging.debug("Adding new Connection")
 
         randomNode1:int = int(np.floor(rng.integers(0, len(self.nodes))))
         randomNode2:int = int(np.floor(rng.integers(0, len(self.nodes))))
@@ -177,6 +210,8 @@ class NeuralNetwork:
         global nextConnectionID
         isNew:bool = True
         connectionInnovationNumber:int = nextConnectionID
+
+        # Check if tried innovation already exists, then use that innovation
         for innoi in range(len(innovationHistory)):
             if innovationHistory[innoi].matches(self, fromNode, toNode):
                 isNew = False # Not a new mutation
@@ -195,14 +230,14 @@ class NeuralNetwork:
 
     def isFullyConnected(self)-> bool:
         maxConnections:int = 0
-        nodesInLayers:np.ndarray = np.zeros([self.layers_total], int)
+        nodesInLayers:np.ndarray = np.zeros([self.layers_amount], int)
 
         for nodei in range(len(self.nodes)):
             nodesInLayers[self.nodes[nodei].layer] += 1
 
-        for layeri in range(self.layers_total-1):
+        for layeri in range(self.layers_amount - 1):
             nodesInFront:int = 0
-            for layerj in range(layeri+1, self.layers_total):
+            for layerj in range(layeri+1, self.layers_amount):
                 nodesInFront += nodesInLayers[layerj]
 
             maxConnections+= nodesInLayers[layeri]*nodesInFront
@@ -216,24 +251,32 @@ class NeuralNetwork:
         if len(self.connections) == 0:
             self.addConnection(innovationHistory)
 
-        rand1:float = rng.uniform()
-        if rand1 < self.mutateChance_ChangeWeight:
+        roll = rng.uniform()
+
+        # Seseel - Highly experimental; a connection that feeds backwards.
+        #   Idea is that if the network is activated back-to-back without being reset, it's able to use these
+        #   connections to pass info on to the 'future'
+        #   AKA a form of memory.
+        if rng.uniform() > 0.001: #rand4 < self.mutateChance_AddConnection:
+            #self.addConnectionRecurrent(innovationHistory)
+            pass
+
+        if rng.uniform() > 0.03:
+            self.addNode(innovationHistory)
+
+        if rng.uniform() > 0.08:
+            self.addConnection(innovationHistory)
+
+        if rng.uniform() > 0.75:
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()
 
-        rand2:float = rng.uniform()
-        if rand2 < self.mutateChance_AddConnection:
-            self.addConnection(innovationHistory)
-
-        rand3: float = rng.uniform()
-        if rand3 < self.mutateChance_AddNode:
-            self.addNode(innovationHistory)
-
     def crossover(self, parent2:NeuralNetwork) -> NeuralNetwork:
-        child:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, hollow=True)
+        global nextNeuralNetworkID
+        child:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, ID=nextNeuralNetworkID, hollow=True)
         child.connections.clear()
         child.nodes.clear()
-        child.layers_total = self.layers_total
+        child.layers_amount = self.layers_amount
         child.nextNodeID = self.nextNodeID
         child.biasNodeID = self.biasNodeID
 
@@ -274,15 +317,14 @@ class NeuralNetwork:
         return -1
 
     def clone(self) -> NeuralNetwork:
-        clone:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, hollow=True)
+        clone:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, self.ID, hollow=True)
         for nodei in range(len(self.nodes)):
             clone.nodes.append(self.nodes[nodei].clone())
 
         for conni in range(len(self.connections)):
             clone.connections.append(self.connections[conni].clone(clone.getNode(self.connections[conni].fromNode.ID),
                                                                    clone.getNode(self.connections[conni].toNode.ID)))
-
-        clone.layers_total = self.layers_total
+        clone.layers_amount = self.layers_amount
         clone.nextNodeID = self.nextNodeID
         clone.biasNodeID = self.biasNodeID
         clone.connectNodes()
@@ -290,7 +332,7 @@ class NeuralNetwork:
         return clone
 
     def printNetwork(self)->None:
-        print("Print NN layers:", self.layers_total)
+        print("Print NN layers:", self.layers_amount)
         print("Bias node: ", self.biasNodeID)
         print("Nodes:")
         for nodei in range(len(self.nodes)):
@@ -307,25 +349,91 @@ class NeuralNetwork:
 
 
 
+    def drawNetwork(self, startX:int, startY:int, width:int, height:int)->None:
+        # batchConnections = pyglet.graphics.Batch()
+        # batchNodesOutlines = pyglet.graphics.Batch()
+        # batchNodes = pyglet.graphics.Batch()
+        # batchLabels = pyglet.graphics.Batch()
 
-#   def get_output(self, num:int):
-#   def get_outputs(self):
-#   def set_input(self, num:int, intense:float):
-#   def set_input(self, inputarray:np.ndarray):
+        # batch.add(x)
+        # batch.draw()
 
-#   def mutate(self, mutatechance=1/30, mutatestrength=1):
-#   def clone(self):
-#   def crossover(self, parent2): #parent2 = mate
-#   def cost function
+        allNodes:List[List[Node]] = []
+        nodePoses:List[Vec2d] = []
+        nodeNumbers:List[int] = []
 
-#   def train(self, training_data, training_answers, learnrate):
-#   def GradientDescentDelta(self, training_input, desired_output, deltaimages=None):
-#   def ApplyGradientDecentDelta(self, learnrate, DeltaOutputWeights, DeltaHiddenLayersWeights=None, batchsize=1):
+        # gather all nodes in what is essentially self.network
+        for layeri in range(self.layers_amount):
+            temp:List[Node] = []
+            for nodei in range(len(self.nodes)):
+                if self.nodes[nodei].layer == layeri:
+                    temp.append(self.nodes[nodei])
+            allNodes.append(temp)
+
+        # setup all the node positions
+        for layeri in range(self.layers_amount):
+            x:int = int(startX+((layeri)*width)/
+                        (self.layers_amount + 1.0))
+            for nodei in range(len(allNodes[layeri])):
+                y:int = int(startY + ((nodei)*height)/
+                            (len(allNodes[layeri])+1))
+                nodePoses.append(Vec2d(x, y))
+                nodeNumbers.append(allNodes[layeri][nodei].ID)
+
+        # draw all the connections
+        for conni in range(len(self.connections)):
+            if self.connections[conni].enabled:
+                glLineWidth(np.abs(int(self.connections[conni].weight*2))+1)
+            else:
+                continue
+
+            if self.connections[conni].weight >=0:
+                col = (255, 0, 0, #red/positive weight
+                       255, 0, 0)
+            else:
+                col = (0, 0, 255, #blue/negative weight
+                       0, 0, 255)
+
+            fromNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].fromNode.ID ) ]
+            toNode_pos:np.Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].toNode.ID ) ]
+
+            pyglet.graphics.draw(2, GL_LINES, ('v2i', (fromNode_pos.x,
+                                                       fromNode_pos.y,
+                                                       toNode_pos.x,
+                                                       toNode_pos.y) ),
+                                                ('c3B', col))
+        # Draw all nodes (and ID's)
+
+        label = pyglet.text.Label('23423423',
+                                  font_name='Times New Roman',
+                                  font_size=14,
+                                  x=100, y=100,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0,0,0, 255))
+        nodeShapeOutline = pyglet.shapes.Circle(x=0, y=0, radius=21, color=(0, 0, 0))
+        nodeShape = pyglet.shapes.Circle(x=0, y=0, radius=20, color=(255, 255, 255))
+
+        for nodei in range(len(nodePoses)):
+            nodeShapeOutline.x = nodePoses[nodei].x
+            nodeShapeOutline.y = nodePoses[nodei].y
+            nodeShape.x = nodePoses[nodei].x
+            nodeShape.y = nodePoses[nodei].y
+            label.x = nodePoses[nodei].x
+            label.y = nodePoses[nodei].y
+
+            if nodei == self.input_size:
+                label.text = "B"
+            else:
+                label.text = str(nodeNumbers[nodei])
+
+            nodeShapeOutline.draw()
+            nodeShape.draw()
+            label.draw()
+
+
 
 #   def serpent_serialize(self):
 #   def serpent_deserialize(self, pickledbrain):
-
-#   def getSumWeights(self)->int:
 
 
 #Here because of circular dependancy
@@ -336,14 +444,23 @@ class ConnectionHistory:
         self.innovationNumber:int = innovationNumber
         self.innovationNumbers:List[int] = innovationNumbers.copy()
 
+    def __repr__(self):
+        return str(self.innovationNumber)
+
     def matches(self, neuralnetwork:NeuralNetwork, fromNode:Node, toNode:Node) -> bool:
-        if len(neuralnetwork.connections) == len(self.innovationNumbers):
+        if len(neuralnetwork.connections) == len(self.innovationNumbers)+1:
             if fromNode.ID == self.fromNode and toNode.ID == self.toNode:
                 for coni in range(len(neuralnetwork.connections)):
-                    if not self.innovationNumbers.__contains__ (neuralnetwork.connections[coni].innovationNumber):
+                    if not neuralnetwork.connections[coni].innovationNumber in self.innovationNumbers:
                         return False
                 return True
         return False
+    '''
+    def matches(self, neuralnetwork:NeuralNetwork, fromNode:Node, toNode:Node) -> bool:
+        if fromNode.ID == self.fromNode and toNode.ID == self.toNode:
+            return True
+        return False
+    '''
 
 
 if __name__ == "__main__":
@@ -355,8 +472,8 @@ if __name__ == "__main__":
     #p.runcall(oldbrain.fire_network)
     #p.print_stats()
 
-    '''
-    doonce = False
+
+    doonce = True
     if doonce:
         innovationHistory:List[ConnectionHistory] = list()
 
@@ -366,26 +483,20 @@ if __name__ == "__main__":
         print("Made ANN1")
         output = ANN1.feedForward([1,2,3,4,5,6,7])
         print("ANN1 feedForward", output)
-        ANN1.printNetwork()
+        #ANN1.printNetwork()
         print("Mutating")
-        for dummy in range(10):
+        for dummy in range(100):
             ANN1.mutate(innovationHistory)
         ANN1.printNetwork()
-        ANN1.generateNetwork()
 
-        output = ANN1.feedForward([1,2,3,4,5,6,7])
-        print(output)
-        print("ANN1 Mutated feedForward",output)
+        existingConnections = []
+        for conni in ANN1.connections:
+            for conne in existingConnections:
+                if conni.fromNode.ID == conne.fromNode.ID and conni.toNode.ID == conne.toNode.ID:
+                    print(conni.toNode.ID, conni.fromNode.ID)
+                    existingConnections.append( conne )
+                    break
+        print(existingConnections)
 
-        print("Mutating")
-        for dummy in range(10):
-            ANN1.mutate(innovationHistory)
-        ANN1.printNetwork()
-        ANN1.generateNetwork()
-
-        output = ANN1.feedForward([1,2,3,4,5,6,7])
-        print(output)
-        print("ANN1 Mutated feedForward",output)
-    '''
 
     print("Finished neuralnetwork.py as main")
