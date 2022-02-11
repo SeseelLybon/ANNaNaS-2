@@ -1,5 +1,6 @@
 # Code stolen from, I mean inspired by CodeBullet, as per usual
 import multiprocessing
+import statistics
 
 import colorlog
 import structlog
@@ -30,14 +31,13 @@ from meeple import Meeple
 from itertools import combinations
 
 popcap = 1000
-pop = Population(popcap, 2, 1)
-
-# [ x/bool, o/bool, 2:10 = board ]
+pop:Population
 
 steps = 20
-maxgames = len(pop.pop)
+maxgames = popcap
 gamestep = maxgames//steps
 
+pop_i = 0
 
 genlabel = pyglet.text.Label('23423423',
                           font_name='Times New Roman',
@@ -45,6 +45,13 @@ genlabel = pyglet.text.Label('23423423',
                           x=100, y=750,
                           anchor_x='center', anchor_y='center',
                           color=(0,0,0, 255))
+
+poplabel = pyglet.text.Label('321321321',
+                             font_name='Times New Roman',
+                             font_size=20,
+                             x=100, y=650,
+                             anchor_x='center', anchor_y='center',
+                             color=(0,0,0, 255))
 
 def update(dt):
     global steps
@@ -74,19 +81,19 @@ def update(dt):
 
         player.think(vision=[0,0])
         decision = player.decision
-        total= getFitness(decision,expected[0])
+        total= getScore(decision, expected[0])
 
         player.think(vision=[1,0])
         decision = player.decision
-        total+= getFitness(decision,expected[1])
+        total+= getScore(decision, expected[1])
 
         player.think(vision=[0,1])
         decision = player.decision
-        total+= getFitness(decision,expected[2])
+        total+= getScore(decision, expected[2])
 
         player.think(vision=[1,1])
         decision = player.decision
-        total+= getFitness(decision,expected[3])
+        total+= getScore(decision, expected[3])
 
         player.score = total
         continue
@@ -98,37 +105,40 @@ def update(dt):
     print()
     bestMeep.think(vision=[0,0])
     decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %f" % (expected[0], decision[0], getFitness(decision,expected[0]) ) )
+    print( "Expected %s, Got %.4f, Score %f" % (expected[0], decision[0], getScore(decision, expected[0])))
 
     bestMeep.think(vision=[1,0])
     decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %s" % (expected[1], decision[0], getFitness(decision,expected[1]) ) )
+    print( "Expected %s, Got %.4f, Score %s" % (expected[1], decision[0], getScore(decision, expected[1])))
 
     bestMeep.think(vision=[0,1])
     decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %s" % (expected[2], decision[0], getFitness(decision,expected[2]) ) )
+    print( "Expected %s, Got %.4f, Score %s" % (expected[2], decision[0], getScore(decision, expected[2])))
 
     bestMeep.think(vision=[1,1])
     decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %s" % (expected[3], decision[0], getFitness(decision,expected[3]) ) )
+    print( "Expected %s, Got %.4f, Score %s" % (expected[3], decision[0], getScore(decision, expected[3])))
 
     window.clear()
     bestMeep.brain.drawNetwork(50,50,1150,750)
     genlabel.text = "Generation: "+ str(pop.generation)
     genlabel.draw()
+    poplabel.text = "Population:"+ str(pop_i)
+    poplabel.draw()
 
     # bestMeep.brain.printNetwork()
     #if (bestMeep.score/400)>0.9999:
-    if bestMeep.score == 400:
+    if bestMeep.score >= 4000:
         logger.fatal("Meep solved problem")
         pyglet.clock.unschedule(update)
+        pyglet.app.exit()
 
     pop.naturalSelection()
 
-def getFitness(decision:List[float], expected:List[float]):
+def getScore(decision:List[float], expected:List[float]):
     runningSum = 0
     for i in range(len(decision)):
-        runningSum += 100/((decision[i] - expected[i])**2+1)
+        runningSum += 1000/((decision[i] - expected[i])**2+1)
     return runningSum
 
 
@@ -142,9 +152,27 @@ if __name__ == "__main__":
     #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
     #p.runcall(oldbrain.fire_network)
     #p.print_stats()
+    stats = []
 
-    pyglet.clock.schedule_interval_soft(update, 1)
-    pyglet.app.run()
+    for i in range(10):
+        logger.warning("Testing round %d"%i)
+        pop_i = i
+        pop = Population(popcap, 2, 1)
+        pyglet.clock.schedule_interval_soft(update, 1)
+        pyglet.app.run()
+        stats.append(pop.generation)
+
+
+    print("len: %s"%len(stats),           #len
+          "min: %s"%np.min(stats),           #min
+          "max: %s"%np.max(stats),           #max
+          "mean: %s"%statistics.mean(stats),
+          "median: %s"%statistics.median(stats),
+          "mode: %s"%statistics.mode(stats),
+          "quantiles: %s"%statistics.quantiles(stats),
+          "pvariance: %s"%statistics.pvariance(stats)
+          )
+
 
     #meep1 = Meeple(9,9)
     #meep2 = Meeple(9,9)

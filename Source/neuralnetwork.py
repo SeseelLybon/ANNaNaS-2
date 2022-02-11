@@ -176,7 +176,11 @@ class NeuralNetwork:
 
         self.connectNodes()
 
-        logger.debug("Added new Node")
+        logger.debug("Added new Node, replacing %d:%d with %d:%d:%d" % (self.connections[randomConnection].fromNode.ID,
+                                                                        self.connections[randomConnection].toNode.ID,
+                                                                        self.connections[randomConnection].fromNode.ID,
+                                                                        newNodeNumber,
+                                                                        self.connections[randomConnection].toNode.ID))
 
 
 
@@ -208,7 +212,9 @@ class NeuralNetwork:
         self.connections.append( Connection(self.nodes[randomNode1], self.nodes[randomNode2], rng.uniform(-1,1), connectionInnovationNumber) )
         self.connectNodes()
 
-        logger.debug("Added new Connection")
+
+        logger.debug("Added new Connection: %d:%d" % (randomNode1, randomNode2))
+
 
 
     def checkIfConnected(self, r1:int, r2:int) -> bool:

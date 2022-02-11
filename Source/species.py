@@ -156,8 +156,8 @@ class Species:
         fitnessTaxRate = 0.1
         # Seseel - take 10% of meeps' fitness and add to sum
         for meep in self.meeples:
-            fitnessSum = meep.fitness * fitnessTaxRate
-            meep.fitness*=(1-fitnessSum)
+            fitnessTaxSum += meep.fitness * fitnessTaxRate
+            meep.fitness*=(1-fitnessTaxRate)
 
         # Seseel - return sum/len(self.meeples) fitness
         fitnessTaxReturn = fitnessTaxSum / len(self.meeples)
