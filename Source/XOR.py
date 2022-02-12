@@ -133,6 +133,11 @@ def update(dt):
         pyglet.clock.unschedule(update)
         pyglet.app.exit()
 
+    if pop.generation >= 1000:
+        logger.fatal("Took 1k genertions. Ending population.")
+        pyglet.clock.unschedule(update)
+        pyglet.app.exit()
+
     pop.naturalSelection()
 
 def getScore(decision:List[float], expected:List[float]):
