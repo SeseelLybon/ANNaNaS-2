@@ -275,16 +275,7 @@ class NeuralNetwork:
 
         roll = rng.uniform()
 
-        # Seseel - Highly experimental; a connection that feeds backwards.
-        #   Idea is that if the network is activated back-to-back without being reset, it's able to use these
-        #   connections to pass info on to the 'future'
-        #   AKA a form of memory.
-        if roll < 0.01: #rand4 < self.mutateChance_AddConnection:
-            logger.debug("RNG: Pretending to add new recurrent connection")
-            #self.addConnectionRecurrent(innovationHistory)
-            pass
-
-        elif roll < 0.10:
+        if roll < 0.5:
             logger.debug("RNG: Add new node")
             prenoduples = getDuplicateConnections(self)
             self.addNode(innovationHistory)
@@ -292,7 +283,7 @@ class NeuralNetwork:
                 logger.fatal("Adding Node caused duplicate")
                 printDuplicateConnections(self)
 
-        elif roll < 0.20:
+        if roll < 0.10:
             logger.debug("RNG: Add new connection")
             prenoduples = getDuplicateConnections(self)
             self.addConnection(innovationHistory)
@@ -300,7 +291,7 @@ class NeuralNetwork:
                 logger.fatal("Adding Connection caused duplicate")
                 printDuplicateConnections(self)
 
-        elif roll < 0.75:
+        if roll < 0.80:
             logger.debug("RNG: Mutate weights")
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()

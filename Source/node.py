@@ -24,7 +24,7 @@ class Node:
 
     def fire(self, maxLayer:int) -> None:
         if self.layer == maxLayer:
-            self.outputValue = self.ReLU1(self.inputSum)
+            self.outputValue = self.ReLU2(self.inputSum)
         if self.layer != 0:
             self.outputValue = self.ReLU2(self.inputSum)
 

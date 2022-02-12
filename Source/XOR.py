@@ -43,14 +43,14 @@ genlabel = pyglet.text.Label('23423423',
                           font_name='Times New Roman',
                           font_size=20,
                           x=100, y=750,
-                          anchor_x='center', anchor_y='center',
+                          anchor_x='left', anchor_y='center',
                           color=(0,0,0, 255))
 
 poplabel = pyglet.text.Label('321321321',
                              font_name='Times New Roman',
                              font_size=20,
                              x=100, y=650,
-                             anchor_x='center', anchor_y='center',
+                             anchor_x='left', anchor_y='center',
                              color=(0,0,0, 255))
 
 def update(dt):
@@ -163,14 +163,14 @@ if __name__ == "__main__":
         stats.append(pop.generation)
 
 
-    print("len: %s"%len(stats),           #len
-          "min: %s"%np.min(stats),           #min
-          "max: %s"%np.max(stats),           #max
-          "mean: %s"%statistics.mean(stats),
-          "median: %s"%statistics.median(stats),
-          "mode: %s"%statistics.mode(stats),
-          "quantiles: %s"%statistics.quantiles(stats),
-          "pvariance: %s"%statistics.pvariance(stats)
+    print("len: %s\n"%len(stats),           #len
+          "min: %s\n"%np.min(stats),           #min
+          "max: %s\n"%np.max(stats),           #max
+          "mean: %s\n"%statistics.mean(stats),
+          "median: %s\n"%statistics.median(stats),
+          "mode: %s\n"%statistics.mode(stats),
+          "quantiles: %s\n"%statistics.quantiles(stats),
+          "pvariance: %s\n"%statistics.pvariance(stats)
           )
 
 
