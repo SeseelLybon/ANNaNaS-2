@@ -481,7 +481,7 @@ class ConnectionHistory:
         return str(self.innovationNumber)
 
     def matches(self, neuralnetwork:NeuralNetwork, fromNode:Node, toNode:Node) -> bool:
-        if len(neuralnetwork.connections) == len(self.innovationNumbers)+1:
+        if len(neuralnetwork.connections) == len(self.innovationNumbers):
             if fromNode.ID == self.fromNode and toNode.ID == self.toNode:
                 for coni in range(len(neuralnetwork.connections)):
                     if not neuralnetwork.connections[coni].innovationNumber in self.innovationNumbers:
