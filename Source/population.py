@@ -235,7 +235,7 @@ class Population:
         averageSum = self.getAverageFitnessSum()
 
         #self.species[:] = [ specie for specie in self.species if ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
-        self.species[:] = self.species[0:2] + [ specie for specie in self.species[2:] if ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
+        self.species[:] = self.species[0:2] + [ specie for specie in self.species[2:] if averageSum > 0 and ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
 
         if prekill-len(self.species) > 0:
             logger.warning("Killing %d bad species" % (prekill-len(self.species)))

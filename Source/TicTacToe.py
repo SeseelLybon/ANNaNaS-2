@@ -3,6 +3,11 @@ import multiprocessing
 
 import numpy as np
 
+#import pandas
+#import matplotlib
+#import seaborn
+#import trueskill
+
 import pyglet
 window = pyglet.window.Window(1200,800)
 pyglet.gl.glClearColor(0.7,0.7,0.7,1)
@@ -29,8 +34,8 @@ pop = Population(popcap, 11, 9)
 # [ x/bool, o/bool, 2:10 = board ]
 
 curgame = 0
-steps = 20
-maxgames = sum(1 for dummy in combinations(pop.pop, 2))
+steps = 100
+maxgames = sum(1 for dummy in combinations(pop.pop, 2))*2
 gamestep = maxgames//steps
 
 genlabel = pyglet.text.Label('23423423',
@@ -63,6 +68,21 @@ def update(dt):
 
     for players in combinations(list(range(popcap)), 2):
         endgamestate = pre_game(players)
+
+        if endgamestate[2] == 1: # if player 1/X won
+            if bestMatch is None: # if there's no best match, this wins
+                bestMatch = [players, endgamestate]
+            elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
+                if bestMatch[1][1] < endgamestate[1]:
+                    bestMatch = [players, endgamestate]
+            elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
+                bestMatch = [players, endgamestate]
+            elif bestMatch[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
+                bestMatch = [players, endgamestate]
+            elif bestMatch[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
+                bestMatch = [players, endgamestate]
+
+        endgamestate = pre_game( (players[1], players[0]) )
 
         if endgamestate[2] == 1: # if player 1/X won
             if bestMatch is None: # if there's no best match, this wins
@@ -117,24 +137,24 @@ def pre_game(players):
     #endgamestate = tuple(["Foul", 1, 1])
     if endgamestate[0] == "Winner":
         if endgamestate[2] == 1:
-            meep1.score += 8000
-            meep2.score += np.max([endgamestate[1]-1, 0])
+            meep1.score += 90
+            meep2.score += 60
         elif endgamestate[2] == 2:
-            meep2.score += 8000
-            meep1.score += np.max([endgamestate[1]-1, 0])
+            meep1.score += 50
+            meep2.score += 80
         return endgamestate
     if endgamestate[0] == "Draw":
         # on a draw, give half points
-        meep1.score += 4000+8
-        meep2.score += 4000+8
+        meep1.score += 50
+        meep2.score += 60
         return endgamestate
     elif endgamestate[0] == "Foul":
         if endgamestate[2] == 1: # 2 caused the foul so gains less points
-            meep1.score += np.max([endgamestate[1]-1, 0])
-            meep2.score += np.max([endgamestate[1]-2, 0])
-        elif endgamestate[2] == 1:
-            meep1.score += np.max([endgamestate[1]-2, 0])
-            meep2.score += np.max([endgamestate[1]-1, 0])
+            meep1.score += np.max([np.min([endgamestate[1]-1, 1]), 0])
+            meep1.score += np.max([np.min([endgamestate[1]-2, 1]), 0])
+        elif endgamestate[2] == 2:
+            meep1.score += np.max([np.min([endgamestate[1]-2, 1]), 0])
+            meep1.score += np.max([np.min([endgamestate[1]-1, 1]), 0])
         return endgamestate
 
 
@@ -145,11 +165,11 @@ def run_game(meep1, meep2, show=False)->tuple:
              0, 0, 0,
              0, 0, 0]
 
-    if rng.random() < .5:
-        turn = "X"
-    else:
-        turn = "O"
-
+    #if rng.random() < .5:
+    #    turn = "X"
+    #else:
+    #    turn = "O"
+    turn = "X"
     for turnstep in range(8):
         if turn == "X":
             meep1.think(vision=[1,0]+board)
@@ -231,7 +251,7 @@ if __name__ == "__main__":
     #p.runcall(oldbrain.fire_network)
     #p.print_stats()
 
-    pyglet.clock.schedule_interval_soft(update, 5)
+    pyglet.clock.schedule_interval_soft(update, 1)
     pyglet.app.run()
 
     #meep1 = Meeple(9,9)
