@@ -2,19 +2,26 @@
 import multiprocessing
 
 import numpy as np
-import pyglet
 
-from multiprocessing import Process
-import math
-from typing import List
+import pyglet
+window = pyglet.window.Window(1200,800)
+pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+
+import colorlog
+import logging
+handler = colorlog.StreamHandler()
+handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+logger = colorlog.getLogger('XOR')
+logger.addHandler(handler)
+logger.setLevel(logging.WARNING)
 
 from numpy.random import default_rng
 rng = default_rng()
 
 from population import Population
-from meeple import Meeple
 
 from itertools import combinations
+from typing import List
 
 popcap = 1000
 pop = Population(popcap, 11, 9)
@@ -25,6 +32,13 @@ curgame = 0
 steps = 20
 maxgames = sum(1 for dummy in combinations(pop.pop, 2))
 gamestep = maxgames//steps
+
+genlabel = pyglet.text.Label('23423423',
+                             font_name='Times New Roman',
+                             font_size=20,
+                             x=100, y=750,
+                             anchor_x='left', anchor_y='center',
+                             color=(0,0,0, 255))
 
 def update(dt):
     global curgame
@@ -64,12 +78,10 @@ def update(dt):
                 bestMatch = [players, endgamestate]
 
 
-
-
     print("")
-    if bestMatch:
-        print("Best brain")
-        pop.pop[bestMatch[0][0]].brain.printNetwork()
+#    if bestMatch:
+#        print("Best brain")
+#        pop.pop[bestMatch[0][0]].brain.printNetwork()
 
     print("")
     if bestMatch:
@@ -77,7 +89,13 @@ def update(dt):
         print(run_game(pop.pop[bestMatch[0][0]], pop.pop[bestMatch[0][1]], show=True))
     print("")
 
+    window.clear()
+    pop.pop[bestMatch[0][0]].brain.drawNetwork(50,50,1150,750)
+    genlabel.text = "Generation: "+ str(pop.generation)
+    genlabel.draw()
+
     pop.naturalSelection()
+
 
 
 def pre_game(players):
@@ -193,6 +211,14 @@ def checkWinner(board, meep1, meep2)->int:
         return 2
 
     return 0
+
+
+def getScore(decision:List[float], expected:List[float]):
+    runningSum = 0
+    for i in range(len(decision)):
+        runningSum += 1000/((decision[i] - expected[i])**2+1)
+    return runningSum
+
 
 if __name__ == "__main__":
 

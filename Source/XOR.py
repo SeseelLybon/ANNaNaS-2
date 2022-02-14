@@ -1,9 +1,7 @@
 # Code stolen from, I mean inspired by CodeBullet, as per usual
-import multiprocessing
 import statistics
 
 import colorlog
-import structlog
 import logging
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))

@@ -44,7 +44,7 @@ class Node:
                     return True
         else:
             for nodei in range(len(self.outputConnections)):
-                if self.outputConnections[nodei] == node:
+                if self.outputConnections[nodei].toNode == node:
                     return True
 
         return False

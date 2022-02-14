@@ -6,7 +6,7 @@ from typing import List
 import math
 import numpy as np
 from numpy.random import default_rng
-
+from itertools import combinations
 from node import Connection
 from node import Node
 
@@ -192,14 +192,18 @@ class NeuralNetwork:
             return
         logger.debug("Adding new Connection")
 
-        randomNode1:int = int(np.floor(rng.integers(0, len(self.nodes))))
-        randomNode2:int = int(np.floor(rng.integers(0, len(self.nodes))))
-
-
-
-        while self.checkIfConnected(randomNode1, randomNode2):
-            randomNode1 = int(np.floor(rng.integers(0, len(self.nodes))))
-            randomNode2 = int(np.floor(rng.integers(0, len(self.nodes))))
+        # grab 2 nodes that don't have a connection
+        rnglist = list( combinations(list(range(len(self.nodes))), 2))
+        rng.shuffle(rnglist)
+        randomNode1 = None
+        randomNode2 = None
+        for rngconi1, rngconi2 in rnglist:
+            randomNode1 = rngconi1
+            randomNode2 = rngconi2
+            if randomNode1 != self.nodes[self.biasNodeID] and \
+                    randomNode2 != self.nodes[self.biasNodeID]:
+                if not self.checkIfConnected(randomNode1, randomNode2):
+                    break;
 
         logger.debug("%s, %s : these meeps were considered non-duplicate" % (randomNode1, randomNode2))
 
