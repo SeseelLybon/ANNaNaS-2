@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from neuralnetwork import NeuralNetwork
-
+from trueskill import Rating
 from typing import List
 
 class Meeple:
@@ -19,6 +19,17 @@ class Meeple:
         self.brainOutputs:int = brainoutputs
 
         self.brain = NeuralNetwork(braininputs, brainoutputs, isHollow)
+
+        self.rating = Rating(15)
+        self.winx:int = 0
+        self.wino:int = 0
+        self.losex:int = 0
+        self.loseo:int = 0
+        self.drawx:int = 0
+        self.drawo:int = 0
+        self.foulx:int = 0
+        self.foulo:int = 0
+
 
     def show(self)->None:
         return

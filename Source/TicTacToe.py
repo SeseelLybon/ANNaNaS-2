@@ -9,6 +9,10 @@ import numpy as np
 #import trueskill
 
 import pyglet
+import trueskill
+
+from meeple import Meeple
+
 window = pyglet.window.Window(1200,800)
 pyglet.gl.glClearColor(0.7,0.7,0.7,1)
 
@@ -28,7 +32,7 @@ from population import Population
 from itertools import combinations
 from typing import List
 
-popcap = 1000
+popcap = 100
 pop = Population(popcap, 11, 9)
 
 # [ x/bool, o/bool, 2:10 = board ]
@@ -99,14 +103,20 @@ def update(dt):
 
 
     print("")
-#    if bestMatch:
-#        print("Best brain")
-#        pop.pop[bestMatch[0][0]].brain.printNetwork()
+
+    meep1:Meeple = pop.pop[bestMatch[0][0]]
+    meep2:Meeple = pop.pop[bestMatch[0][1]]
 
     print("")
     if bestMatch:
         print("Best match played by meeps:", bestMatch[0][0], "and", bestMatch[0][1])
-        print(run_game(pop.pop[bestMatch[0][0]], pop.pop[bestMatch[0][1]], show=True))
+        print("Meep1:", meep1.winx, meep1.wino, meep1.losex, meep1.loseo, meep1.drawx, meep1.drawo, meep1.foulx, meep1.foulo)
+        print("Meep2:", meep2.winx, meep2.wino, meep2.losex, meep2.loseo, meep2.drawx, meep2.drawo, meep2.foulx, meep2.foulo)
+        print("Ratings:", trueskill.expose(meep1.rating), "and", trueskill.expose(meep2.rating) )
+        print("Quality:", trueskill.quality_1vs1(meep1.rating, meep2.rating))
+        print(run_game(meep1, meep2, show=True))
+        print("Best match played by meeps:", bestMatch[0][1], "and", bestMatch[0][0])
+        print(run_game(meep1, pop.pop[bestMatch[0][0]], show=True))
     print("")
 
     window.clear()
@@ -125,36 +135,45 @@ def pre_game(players):
     if curgame%gamestep==0:
         print("=",end="")
 
-    meep1 = pop.pop[players[0]]
-    meep2 = pop.pop[players[1]]
+    meep1:Meeple = pop.pop[players[0]]
+    meep2:Meeple = pop.pop[players[1]]
 
-
-    # should I keep running when there's draws?
-    #while not run_game():
-    #    pass
+    quality = trueskill.quality_1vs1(meep1.rating, meep2.rating)
 
     endgamestate:tuple = run_game(meep1, meep2)
     #endgamestate = tuple(["Foul", 1, 1])
     if endgamestate[0] == "Winner":
         if endgamestate[2] == 1:
-            meep1.score += 90
-            meep2.score += 60
+            meep1.rating, meep2.rating = trueskill.rate_1vs1(meep1.rating, meep2.rating)
+            meep1.score += 90*quality
+            meep2.score += 60*quality
+            meep1.winx +=1
+            meep2.loseo +=1
         elif endgamestate[2] == 2:
-            meep1.score += 50
-            meep2.score += 80
+            meep2.rating, meep1.rating = trueskill.rate_1vs1(meep2.rating, meep1.rating)
+            meep1.score += 50*quality
+            meep2.score += 80*quality
+            meep1.losex +=1
+            meep2.wino +=1
         return endgamestate
     if endgamestate[0] == "Draw":
-        # on a draw, give half points
-        meep1.score += 50
-        meep2.score += 60
+        meep1.rating, meep2.rating = trueskill.rate_1vs1(meep1.rating, meep2.rating, drawn=True)
+        meep1.score += 50*quality
+        meep2.score += 60*quality
+        meep1.drawx +=1
+        meep2.drawo +=1
         return endgamestate
     elif endgamestate[0] == "Foul":
         if endgamestate[2] == 1: # 2 caused the foul so gains less points
-            meep1.score += np.max([np.min([endgamestate[1]-1, 1]), 0])
-            meep1.score += np.max([np.min([endgamestate[1]-2, 1]), 0])
+            meep1.rating, meep2.rating = trueskill.rate_1vs1(meep1.rating, meep2.rating, drawn=True)
+            meep1.score += np.max([np.min([endgamestate[1]-1, 1]), 0])*quality
+            meep2.score += np.max([np.min([endgamestate[1]-2, 1]), 0])*quality
+            meep1.foulx +=1
         elif endgamestate[2] == 2:
+            meep2.rating, meep1.rating = trueskill.rate_1vs1(meep2.rating, meep1.rating, drawn=True)
             meep1.score += np.max([np.min([endgamestate[1]-2, 1]), 0])
-            meep1.score += np.max([np.min([endgamestate[1]-1, 1]), 0])
+            meep2.score += np.max([np.min([endgamestate[1]-1, 1]), 0])
+            meep2.foulo +=1
         return endgamestate
 
 
