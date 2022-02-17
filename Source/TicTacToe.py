@@ -1,11 +1,14 @@
 # Code stolen from, I mean inspired by CodeBullet, as per usual
 import multiprocessing
+import statistics
 
 import numpy as np
 
 #import pandas
 #import matplotlib
 #import seaborn
+
+import asyncio
 
 import pyglet
 import trueskill
@@ -71,6 +74,16 @@ def update(dt):
     # [{players}, winner, turns]
 
     for players in combinations(list(range(popcap)), 2):
+        pre_game(players)
+
+    pop.pop.sort(key=lambda meep: meep.score, reverse=True)
+
+    for players in combinations(list(range(popcap//2)), 2):
+        pre_game(players)
+
+    pop.pop.sort(key=lambda meep: meep.score, reverse=True)
+
+    for players in combinations(list(range(popcap//5)), 2):
         endgamestate = pre_game(players)
 
         if endgamestate[2] == 1: # if player 1/X won
@@ -100,7 +113,6 @@ def update(dt):
                 bestMatch = [players, endgamestate]
             elif bestMatch[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
                 bestMatch = [players, endgamestate]
-
 
     print("")
 

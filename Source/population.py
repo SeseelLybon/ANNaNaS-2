@@ -25,7 +25,7 @@ class Population:
 
     def __init__(self, pop_size:int, input_size:int, output_size:int ):
         self.innovationHistory:List[ConnectionHistory] = list()
-        self.pop = np.ndarray([pop_size], dtype=Meeple)
+        self.pop:List[Meeple] = list()
         self.species:List[Species] = []
         self.nextSpeciesID = 0
 
@@ -37,10 +37,10 @@ class Population:
         self.maxStaleness = 50 # how often a species can not improve before it's considered stale/stuck
         self.massExtinctionEvent = False
 
-        for i in range(self.pop.shape[0]):
-            self.pop[i] = Meeple(input_size, output_size)
-            self.pop[i].brain.mutate(self.innovationHistory)
-            self.pop[i].brain.generateNetwork()
+        for i in range(self.size):
+            self.pop.append( Meeple(input_size, output_size) )
+            self.pop[-1].brain.mutate(self.innovationHistory)
+            self.pop[-1].brain.generateNetwork()
 
         self.bestMeeple:Meeple = self.pop[0]
         self.highestFitness = 0
@@ -151,7 +151,7 @@ class Population:
             children.append(specie.bestMeeple.clone())
 
             #generate number of children based on how well the species is doing compared to the rest; the better the bigger.
-            newChildrenAmount = math.floor((specie.averageFitness/averageSum) * self.pop.size) -1
+            newChildrenAmount = math.floor((specie.averageFitness/averageSum) * len(self.pop) ) -1
 
             for i in range(newChildrenAmount):
                 children.append(specie.generateChild(self.innovationHistory))
@@ -166,7 +166,7 @@ class Population:
 
         logger.info("Made %d new children from scratch(best species)" % (len(children)-oldchillen))
 
-        self.pop = np.array(children, dtype=Meeple)
+        self.pop[:] = children[:]
         self.generation += 1
 
         for meep in self.pop:
@@ -328,10 +328,10 @@ def deltaTimeS(last_time):
 
 if __name__ == "__main__":
 
-    import timeit
-    import cProfile
     print("Starting population.py as main")
 
+    #import timeit
+    #import cProfile
     #p = cProfile.Profile()
     #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
     #p.runcall(oldbrain.fire_network)
