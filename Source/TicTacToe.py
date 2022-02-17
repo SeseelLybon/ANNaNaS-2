@@ -6,10 +6,10 @@ import numpy as np
 #import pandas
 #import matplotlib
 #import seaborn
-#import trueskill
 
 import pyglet
 import trueskill
+trueskill.TrueSkill(backend='scipy')
 
 from meeple import Meeple
 
@@ -137,6 +137,8 @@ def pre_game(players):
 
     meep1:Meeple = pop.pop[players[0]]
     meep2:Meeple = pop.pop[players[1]]
+    #meep1:Meeple = players[0]
+    #meep2:Meeple = players[1]
 
     quality = trueskill.quality_1vs1(meep1.rating, meep2.rating)
 
@@ -166,13 +168,13 @@ def pre_game(players):
     elif endgamestate[0] == "Foul":
         if endgamestate[2] == 1: # 2 caused the foul so gains less points
             meep1.rating, meep2.rating = trueskill.rate_1vs1(meep1.rating, meep2.rating, drawn=True)
-            meep1.score += np.max([np.min([endgamestate[1]-1, 1]), 0])*quality
-            meep2.score += np.max([np.min([endgamestate[1]-2, 1]), 0])*quality
+            meep1.score += max([min([endgamestate[1]-1, 1]), 0])*quality
+            meep2.score += max([min([endgamestate[1]-2, 1]), 0])*quality
             meep1.foulx +=1
         elif endgamestate[2] == 2:
             meep2.rating, meep1.rating = trueskill.rate_1vs1(meep2.rating, meep1.rating, drawn=True)
-            meep1.score += np.max([np.min([endgamestate[1]-2, 1]), 0])
-            meep2.score += np.max([np.min([endgamestate[1]-1, 1]), 0])
+            meep1.score += max([min([endgamestate[1]-2, 1]), 0])
+            meep2.score += max([min([endgamestate[1]-1, 1]), 0])
             meep2.foulo +=1
         return endgamestate
 
@@ -193,7 +195,7 @@ def run_game(meep1, meep2, show=False)->tuple:
         if turn == "X":
             meep1.think(vision=[1,0]+board)
             decision = meep1.decision
-            index = decision.index(np.max(decision))
+            index = decision.index(max(decision))
             if show:
                 print("X", decision)
             if board[index] == 0:
@@ -204,7 +206,7 @@ def run_game(meep1, meep2, show=False)->tuple:
         elif turn == "O":
             meep2.think(vision=[0,1]+board)
             decision = meep2.decision
-            index = decision.index(np.max(decision))
+            index = decision.index(max(decision))
             if show:
                 print("O", decision)
             if board[index] == 0:
@@ -261,24 +263,13 @@ def getScore(decision:List[float], expected:List[float]):
 
 if __name__ == "__main__":
 
-    import timeit
     import cProfile
-    print("Starting Main.py as main")
+    print("Starting TicTacToe.py as __main__")
 
-    #p = cProfile.Profile()
-    #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
-    #p.runcall(oldbrain.fire_network)
-    #p.print_stats()
+    #in Terminal -> snakeviz source/profiledprofile.prof
+    #cProfile.run('update(10)', filename="profiledprofile.prof")
 
     pyglet.clock.schedule_interval_soft(update, 1)
     pyglet.app.run()
 
-    #meep1 = Meeple(9,9)
-    #meep2 = Meeple(9,9)
-    #pre_game(tuple([meep1,meep2]))
-    #pass
-
-    #for players in combinations(pop.pop, 2):
-    #    print(players[0], players[1])
-
-    print("Finished Main.py as main")
+    print("Finished TicTacToe.py as __main__")

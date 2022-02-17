@@ -64,13 +64,19 @@ class Node:
         return np.max([0, x])
     @staticmethod
     def ReLU2(x: float) -> float:
-        return np.max([0, np.min([x, 1])])
+        return max([0, min([x, 1])])
+        #if x > 1:
+        #    x = 1
+        #if x < 0:
+        #    x = 0
+        #return x
     @staticmethod
     def ReLU3(x: float) -> int:
         if x <= 0:
             return 0
         else:
             return 1
+
 
 
 #Here because of circular dependancy
