@@ -133,3 +133,7 @@ dmypy.json
 Source/spreadsheetdata.txt
 
 *.bat
+
+Source/BestMeepleBrain.json
+
+Source/NeuralNetwork.json

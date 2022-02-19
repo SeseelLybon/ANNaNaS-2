@@ -87,6 +87,7 @@ class Population:
                 self.highestScore = self.pop[meepi].score
                 maxFit = self.pop[meepi].fitness
 
+        self.bestMeeple.brain.JSONstoreNeuralNetwork(filepath="BestMeepleBrain.json")
 
 
     def naturalSelection(self):

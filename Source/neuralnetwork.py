@@ -467,7 +467,31 @@ class NeuralNetwork:
             nodeShape.draw()
             label.draw()
 
+    def JSONstoreNeuralNetwork(self, filepath="NeuralNetwork.json"):
+        import jsonpickle
+        import jsonpickle.ext.numpy as jsonpickle_numpy
+        jsonpickle_numpy.register_handlers()
+        jsonpickle.set_encoder_options('json', indent=4)
 
+        with open(filepath, 'w') as file:
+            frozen = jsonpickle.encode(self)
+            file.write(frozen)
+
+    @staticmethod
+    def JSONloadNueralNetwork(filepath="NeuralNetwork.json") -> NeuralNetwork:
+        import jsonpickle;
+        import jsonpickle.ext.numpy as jsonpickle_numpy;
+        jsonpickle_numpy.register_handlers();
+        jsonpickle.set_decoder_options('json');
+
+        with open(filepath, 'r') as file:
+            templines = file.readlines();
+
+        tempjoined = ''.join(templines);
+
+        thawed = jsonpickle.decode(tempjoined);
+
+        return thawed
 
 #   def serpent_serialize(self):
 #   def serpent_deserialize(self, pickledbrain):
@@ -523,33 +547,23 @@ if __name__ == "__main__":
     if doonce:
         innovationHistory:List[ConnectionHistory] = list()
 
-        logger.setLevel(logging.WARNING)
+        logger.setLevel(logging.INFO)
 
         ANN1 = NeuralNetwork(9, 9)
         ANN1.generateNetwork()
         logger.info("Made ANN1")
+        for dummy in range(100):
+            ANN1.mutate(innovationHistory)
+
         output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
         logger.info("ANN1 feedForward: %s" % output)
-        #ANN1.printNetwork()
-        for dummy in range(100):
-        #while len(getDuplicateConnections(ANN1)) == 0:
-        #    logger.info("Mutating")
-            ANN1.mutate(innovationHistory)
-            #printDuplicateConnections(ANN1)
-        #ANN1.printNetwork()
-
-    def update(dt):
-        window.clear()
-        ANN1.drawNetwork(50,50,1150,750)
 
 
-    todrawnetwork = True
-    if todrawnetwork:
-        window = pyglet.window.Window(1200,800)
-        pyglet.gl.glClearColor(0.7,0.7,0.7,1)
-        window.clear()
+        ANN1.JSONstoreNeuralNetwork()
 
-        pyglet.clock.schedule_interval_soft(update, 1)
-        pyglet.app.run()
+        ANN2:NeuralNetwork = NeuralNetwork.JSONloadNueralNetwork()
+
+        output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
+        logger.info("ANN1 feedForward: %s" % output)
 
     logger.info("Finished neuralnetwork.py as main")
