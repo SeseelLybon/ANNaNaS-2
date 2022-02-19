@@ -32,6 +32,7 @@ from population import Population
 
 from itertools import combinations
 from typing import List
+from typing import Tuple
 
 popcap = 100
 pop = Population(popcap, 11, 9)
@@ -68,7 +69,8 @@ def update(dt):
         print(" ", end="")
     print("|", maxgames, "/", gamestep, "/", steps)
 
-    bestMatch = None
+    bestMatchX = None
+    bestMatchO = None
     # [{players}, winner, turns]
 
     for players in combinations(list(range(popcap)), 2):
@@ -85,50 +87,48 @@ def update(dt):
         endgamestate = pre_game(players)
 
         if endgamestate[2] == 1: # if player 1/X won
-            if bestMatch is None: # if there's no best match, this wins
-                bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
-                if bestMatch[1][1] < endgamestate[1]:
-                    bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
-                bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatch = [players, endgamestate]
+            if bestMatchX is None: # if there's no best match, this wins
+                bestMatchX = [players, endgamestate]
+            elif bestMatchX[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
+                if bestMatchX[1][1] < endgamestate[1]:
+                    bestMatchX = [players, endgamestate]
+            elif bestMatchX[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
+                bestMatchX = [players, endgamestate]
+            elif bestMatchX[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
+                bestMatchX = [players, endgamestate]
+            elif bestMatchX[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
+                bestMatchX = [players, endgamestate]
 
         endgamestate = pre_game( (players[1], players[0]) )
 
-        if endgamestate[2] == 1: # if player 1/X won
-            if bestMatch is None: # if there's no best match, this wins
-                bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
-                if bestMatch[1][1] < endgamestate[1]:
-                    bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
-                bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatch = [players, endgamestate]
-            elif bestMatch[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatch = [players, endgamestate]
+        if endgamestate[2] == 2: # if player 2/O won
+            if bestMatchO is None: # if there's no best match, this wins
+                bestMatchO = [players, endgamestate]
+            elif bestMatchO[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
+                if bestMatchO[1][1] < endgamestate[1]:
+                    bestMatchO = [players, endgamestate]
+            elif bestMatchO[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
+                bestMatchO = [players, endgamestate]
+            elif bestMatchO[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
+                bestMatchO = [players, endgamestate]
+            elif bestMatchO[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
+                bestMatchO = [players, endgamestate]
+
 
     print("")
-
-    meep1:Meeple = pop.pop[bestMatch[0][0]]
-    meep2:Meeple = pop.pop[bestMatch[0][1]]
-
-    print("")
-    if bestMatch:
-        print("Best match played by meeps:", bestMatch[0][0], "and", bestMatch[0][1])
-        print("Meep1:", meep1.winx, meep1.wino, meep1.losex, meep1.loseo, meep1.drawx, meep1.drawo, meep1.foulx, meep1.foulo)
-        print("Meep2:", meep2.winx, meep2.wino, meep2.losex, meep2.loseo, meep2.drawx, meep2.drawo, meep2.foulx, meep2.foulo)
-        print(run_game(meep1, meep2, show=True))
-        print("Best match played by meeps:", bestMatch[0][1], "and", bestMatch[0][0])
-        print(run_game(meep1, pop.pop[bestMatch[0][0]], show=True))
+    if bestMatchX:
+        meepX1:Meeple = pop.pop[bestMatchX[0][0]]
+        meepO1:Meeple = pop.pop[bestMatchO[0][0]]
+        print("MeepX1:", meepX1.winx, meepX1.wino, meepX1.losex, meepX1.loseo, meepX1.drawx, meepX1.drawo, meepX1.foulx, meepX1.foulo)
+        print("MeepO1:", meepO1.winx, meepO1.wino, meepO1.losex, meepO1.loseo, meepO1.drawx, meepO1.drawo, meepO1.foulx, meepO1.foulo)
+        print("Match played by meeps:", bestMatchX[0][0], "and", bestMatchO[0][0])
+        print(run_game(meepX1, meepO1, show=True))
+        print("Match played by meeps:", bestMatchO[0][0], "and", bestMatchX[0][0])
+        print(run_game(meepO1, meepX1, show=True))
     print("")
 
     window.clear()
-    pop.pop[bestMatch[0][0]].brain.drawNetwork(50,50,1150,750)
+    pop.pop[bestMatchX[0][0]].brain.drawNetwork(50,50,1150,750)
     genlabel.text = "Generation: "+ str(pop.generation)
     genlabel.draw()
 
@@ -136,7 +136,7 @@ def update(dt):
 
 
 
-def pre_game(players):
+def pre_game(players)->Tuple[Tuple[int,int], int, int]:
     global curgame
     global pop
     curgame+=1
