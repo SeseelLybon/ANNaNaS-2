@@ -51,8 +51,6 @@ class NeuralNetwork:
         self.nodes:List[Node] = list()
         self.network:List[Node] = list()
 
-
-
         if not hollow:
             for nodei in range(self.input_size):
                 self.nodes.append(Node(nodei))
@@ -405,15 +403,13 @@ class NeuralNetwork:
                         (self.layers_amount + 1.0))
             for nodei in range(len(allNodes[layeri])):
 
-                if layeri%2==1 and not layeri == self.layers_amount:
-                    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1)+
-                                          (height/2)/(len(allNodes[layeri])+1)))
-                else:
-                    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1))
+                #if layeri%2==1 and not layeri == self.layers_amount:
+                #    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1)+
+                #                          (height/2)/(len(allNodes[layeri])+1)))
+                #else:
+                #    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1))
+                y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1)))
 
-
-
-                            )
                 nodePoses.append(Vec2d(x, y))
                 nodeNumbers.append(allNodes[layeri][nodei].ID)
 

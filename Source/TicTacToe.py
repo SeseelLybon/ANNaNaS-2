@@ -61,6 +61,11 @@ def update(dt):
     print("New generation: ", pop.generation)
     # each update is a generation
 
+    window.clear()
+    pop.pop[0].brain.drawNetwork(50,50,1150,750)
+    genlabel.text = "Generation: "+ str(pop.generation)
+    genlabel.draw()
+
     curgames = 0
 
     for dummy in range(steps//5):
@@ -69,8 +74,6 @@ def update(dt):
         print(" ", end="")
     print("|", maxgames, "/", gamestep, "/", steps)
 
-    bestMatchX = None
-    bestMatchO = None
     # [{players}, winner, turns]
 
     for players in combinations(list(range(popcap)), 2):
@@ -83,54 +86,27 @@ def update(dt):
 
     pop.pop.sort(key=lambda meep: meep.score, reverse=True)
 
+    bestMatchX = None
+    bestMatchO = None
+
     for players in combinations(list(range(popcap//5)), 2):
         endgamestate = pre_game(players)
 
-        if endgamestate[2] == 1: # if player 1/X won
-            if bestMatchX is None: # if there's no best match, this wins
-                bestMatchX = [players, endgamestate]
-            elif bestMatchX[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
-                if bestMatchX[1][1] < endgamestate[1]:
-                    bestMatchX = [players, endgamestate]
-            elif bestMatchX[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
-                bestMatchX = [players, endgamestate]
-            elif bestMatchX[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatchX = [players, endgamestate]
-            elif bestMatchX[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatchX = [players, endgamestate]
-
         endgamestate = pre_game( (players[1], players[0]) )
-
-        if endgamestate[2] == 2: # if player 2/O won
-            if bestMatchO is None: # if there's no best match, this wins
-                bestMatchO = [players, endgamestate]
-            elif bestMatchO[1][0] == "Foul" and endgamestate[0] == "Foul": # if the best and this match are a foul, the match with the most steps wins
-                if bestMatchO[1][1] < endgamestate[1]:
-                    bestMatchO = [players, endgamestate]
-            elif bestMatchO[1][0] == "Foul" and endgamestate[0] == "Draw": # Draws are better than fouls. only first draw needs to be stored
-                bestMatchO = [players, endgamestate]
-            elif bestMatchO[1][0] == "Foul" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatchO = [players, endgamestate]
-            elif bestMatchO[1][0] == "Draw" and endgamestate[0] ==  "Winner": # Wins are better than fouls
-                bestMatchO = [players, endgamestate]
 
 
     print("")
     if bestMatchX:
-        meepX1:Meeple = pop.pop[bestMatchX[0][0]]
-        meepO1:Meeple = pop.pop[bestMatchO[0][0]]
-        print("MeepX1:", meepX1.winx, meepX1.wino, meepX1.losex, meepX1.loseo, meepX1.drawx, meepX1.drawo, meepX1.foulx, meepX1.foulo)
-        print("MeepO1:", meepO1.winx, meepO1.wino, meepO1.losex, meepO1.loseo, meepO1.drawx, meepO1.drawo, meepO1.foulx, meepO1.foulo)
-        print("Match played by meeps:", bestMatchX[0][0], "and", bestMatchO[0][0])
-        print(run_game(meepX1, meepO1, show=True))
-        print("Match played by meeps:", bestMatchO[0][0], "and", bestMatchX[0][0])
-        print(run_game(meepO1, meepX1, show=True))
+        meep1:Meeple = pop.pop[0]
+        meep2:Meeple = pop.pop[1]
+        print("MeepX1:", meep1.winx, meep1.wino, meep1.losex, meep1.loseo, meep1.drawx, meep1.drawo, meep1.foulx, meep1.foulo)
+        print("MeepO1:", meep2.winx, meep2.wino, meep2.losex, meep2.loseo, meep2.drawx, meep2.drawo, meep2.foulx, meep2.foulo)
+        print("Match played by meeps: 0 and 1")
+        print(run_game(meep1, meep2, show=True))
+        print("Match played by meeps: 1 and 0")
+        print(run_game(meep2, meep1, show=True))
     print("")
 
-    window.clear()
-    pop.pop[bestMatchX[0][0]].brain.drawNetwork(50,50,1150,750)
-    genlabel.text = "Generation: "+ str(pop.generation)
-    genlabel.draw()
 
     pop.naturalSelection()
 
