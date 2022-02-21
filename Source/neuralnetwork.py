@@ -13,7 +13,7 @@ from node import Node
 from pymunk import Vec2d
 
 import pyglet
-from pyglet.gl import *
+import pyglet.gl as pygl
 
 rng = default_rng()
 
@@ -193,8 +193,8 @@ class NeuralNetwork:
         # grab 2 nodes that don't have a connection
         rnglist = list( combinations(list(range(len(self.nodes))), 2))
         rng.shuffle(rnglist)
-        randomNode1 = None
-        randomNode2 = None
+        randomNode1:int = None
+        randomNode2:int = None
         for rngconi1, rngconi2 in rnglist:
             randomNode1 = rngconi1
             randomNode2 = rngconi2
@@ -416,7 +416,7 @@ class NeuralNetwork:
         # draw all the connections
         for conni in range(len(self.connections)):
             if self.connections[conni].enabled:
-                glLineWidth(np.abs(int(self.connections[conni].weight*2))+1)
+                pygl.glLineWidth(np.abs(int(self.connections[conni].weight*2))+1)
             else:
                 continue
 
@@ -430,11 +430,11 @@ class NeuralNetwork:
             fromNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].fromNode.ID ) ]
             toNode_pos:np.Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].toNode.ID ) ]
 
-            pyglet.graphics.draw(2, GL_LINES, ('v2i', (fromNode_pos.x,
-                                                       fromNode_pos.y,
-                                                       toNode_pos.x,
-                                                       toNode_pos.y) ),
-                                                ('c3B', col))
+            pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
+                                                            fromNode_pos.y,
+                                                            toNode_pos.x,
+                                                            toNode_pos.y) ),
+                                                            ('c3B', col))
         # Draw all nodes (and ID's)
 
         label = pyglet.text.Label('23423423',

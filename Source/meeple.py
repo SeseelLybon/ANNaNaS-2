@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from neuralnetwork import NeuralNetwork
-from trueskill import Rating
+import trueskill as ts
+import elo
 from typing import List
 
 class Meeple:
@@ -20,7 +21,8 @@ class Meeple:
 
         self.brain = NeuralNetwork(braininputs, brainoutputs, isHollow)
 
-        self.rating = Rating(15)
+        self.trueskill = ts.Rating(15)
+        self.elo = elo.Rating()
         self.winx:int = 0
         self.wino:int = 0
         self.losex:int = 0
@@ -61,6 +63,7 @@ class Meeple:
         clone.brain.generateNetwork()
         clone.generation = self.generation
         clone.bestScore = self.bestScore
+        clone.elo = self.elo
         return clone
 
     def calculateFitness(self)->None:
