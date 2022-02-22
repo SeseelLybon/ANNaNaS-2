@@ -1,6 +1,7 @@
 # Code stolen from, I mean inspired by CodeBullet, as per usual
 import multiprocessing
 import statistics
+import time
 
 import numpy as np
 
@@ -8,7 +9,7 @@ import numpy as np
 #import matplotlib
 #import seaborn
 
-import asyncio
+import elo
 
 import pyglet
 
@@ -21,9 +22,9 @@ import colorlog
 import logging
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
-logger = colorlog.getLogger('XOR')
+logger = colorlog.getLogger('TicTacToe')
 logger.addHandler(handler)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 from numpy.random import default_rng
 rng = default_rng()
@@ -31,17 +32,23 @@ rng = default_rng()
 from population import Population
 
 from itertools import combinations
+from itertools import permutations
 from typing import List
 from typing import Tuple
 
-popcap = 100
+popcap = 1000
 pop = Population(popcap, 11, 9)
 
 # [ x/bool, o/bool, 2:10 = board ]
 
 curgame = 0
 steps = 100
-maxgames = sum(1 for dummy in combinations(pop.pop, 2))*2
+maxgames = sum(1 for dummy in combinations(pop.pop, 2))
+#tempmg=0
+#for i in range(1,2,2):
+#    tempmg += maxgames//i
+#maxgames=tempmg
+print(maxgames)
 gamestep = maxgames//steps
 
 genlabel = pyglet.text.Label('23423423',
@@ -57,16 +64,18 @@ def update(dt):
     global pop
     global gamestep
 
-    print("---------------------------------------")
-    print("New generation: ", pop.generation)
+    logger.info("---------------------------------------")
+    logger.info("New generation: %d" % pop.generation)
     # each update is a generation
+    temptime = time.time()
+    lasttime = [temptime for i in range(2)]
 
     window.clear()
     pop.pop[0].brain.drawNetwork(50,50,1150,750)
     genlabel.text = "Generation: "+ str(pop.generation)
     genlabel.draw()
 
-    curgames = 0
+    curgame = 0
 
     for dummy in range(steps//5):
         print("    -",end="")
@@ -75,46 +84,30 @@ def update(dt):
     print("|", maxgames, "/", gamestep, "/", steps)
 
     # [{players}, winner, turns]
-
-    for players in combinations(list(range(popcap)), 2):
-        pre_game(players)
-
-    pop.pop.sort(key=lambda meep: meep.score, reverse=True)
-
-    for players in combinations(list(range(popcap//2)), 2):
-        pre_game(players)
-
-    pop.pop.sort(key=lambda meep: meep.score, reverse=True)
-
-    bestMatchX = None
-    bestMatchO = None
-
-    for players in combinations(list(range(popcap//5)), 2):
-        endgamestate = pre_game(players)
-
-        endgamestate = pre_game( (players[1], players[0]) )
-
+    for i in range(1,8,2):
+        for players in combinations(list(range(popcap//i)), 2):
+            pre_game(players)
+        pop.pop.sort(key=lambda meep: meep.elo.rating, reverse=True)
 
     print("")
-    if bestMatchX:
-        meep1:Meeple = pop.pop[0]
-        meep2:Meeple = pop.pop[1]
-        print("MeepX1:", meep1.winx, meep1.wino, meep1.losex, meep1.loseo, meep1.drawx, meep1.drawo, meep1.foulx, meep1.foulo)
-        print("MeepO1:", meep2.winx, meep2.wino, meep2.losex, meep2.loseo, meep2.drawx, meep2.drawo, meep2.foulx, meep2.foulo)
-        print("Match played by meeps: 0 and 1")
-        print(run_game(meep1, meep2, show=True))
-        print("Match played by meeps: 1 and 0")
-        print(run_game(meep2, meep1, show=True))
-    print("")
+    meep1:Meeple = pop.pop[0]
+    meep2:Meeple = pop.pop[1]
+    logger.info("Meep1: %f %d %d %d %d %d %d %d %d" %
+                 (meep1.elo.rating, meep1.winx, meep1.wino, meep1.losex, meep1.loseo, meep1.drawx, meep1.drawo, meep1.foulx, meep1.foulo))
+    logger.info("Meep2: %f %d %d %d %d %d %d %d %d" %
+                 (meep2.elo.rating, meep2.winx, meep2.wino, meep2.losex, meep2.loseo, meep2.drawx, meep2.drawo, meep2.foulx, meep2.foulo))
 
+    logger.info("Games took :%.2fs" % (time.time()-lasttime[0]));
 
+    lasttime[1] = time.time()
     pop.naturalSelection()
+    logger.info("NaS took :%.2fs" % (time.time()-lasttime[1]));
+    logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
 
 
-def pre_game(players)->Tuple[Tuple[int,int], int, int]:
-    global curgame
-    global pop
+def pre_game(players)->tuple:
+    global curgame, pop
     curgame+=1
     if curgame%gamestep==0:
         print("=",end="")
@@ -129,28 +122,39 @@ def pre_game(players)->Tuple[Tuple[int,int], int, int]:
     #endgamestate = tuple(["Foul", 1, 1])
     if endgamestate[0] == "Winner":
         if endgamestate[2] == 1:
+            meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 1)
+            meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0)
             meep1.score += 90
             meep2.score += 60
             meep1.winx +=1
             meep2.loseo +=1
         elif endgamestate[2] == 2:
+            meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0)
+            meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 1)
             meep1.score += 50
             meep2.score += 80
             meep1.losex +=1
             meep2.wino +=1
         return endgamestate
-    if endgamestate[0] == "Draw":
+    elif endgamestate[0] == "Draw":
+        meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0.25)
+        meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0.75)
         meep1.score += 50
         meep2.score += 60
         meep1.drawx +=1
         meep2.drawo +=1
         return endgamestate
+
+    #meep1.score = meep1.rating.rating
+    #meep2.score = meep1.rating.rating
     elif endgamestate[0] == "Foul":
         if endgamestate[2] == 1: # 2 caused the foul so gains less points
+            #meep2.elo.rating = ELO.newRating(meep1.elo.rating, ELO.winChance(meep1.elo.rating, meep2.elo.rating), 0.10)
             meep1.score += max([min([endgamestate[1]-1, 1]), 0])
             meep2.score += max([min([endgamestate[1]-2, 1]), 0])
-            meep1.foulx +=1
+            meep1.foulx += 1
         elif endgamestate[2] == 2:
+            #meep1.elo.rating = ELO.newRating(meep2.elo.rating, ELO.winChance(meep2.elo.rating, meep1.elo.rating), 0.10)
             meep1.score += max([min([endgamestate[1]-2, 1]), 0])
             meep2.score += max([min([endgamestate[1]-1, 1]), 0])
             meep2.foulo +=1
@@ -232,11 +236,11 @@ def checkWinner(board, meep1, meep2)->int:
     return 0
 
 
-def getScore(decision:List[float], expected:List[float]):
-    runningSum = 0
-    for i in range(len(decision)):
-        runningSum += 1000/((decision[i] - expected[i])**2+1)
-    return runningSum
+#def getScore(decision:List[float], expected:List[float]):
+#    runningSum = 0
+#    for i in range(len(decision)):
+#        runningSum += 1000/((decision[i] - expected[i])**2+1)
+#    return runningSum
 
 
 if __name__ == "__main__":

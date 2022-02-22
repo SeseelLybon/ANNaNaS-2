@@ -162,7 +162,8 @@ class Population:
 
         oldchillen = len(children)
         # If the pop-cap hasn't been filled yet, keep getting children from the best specie till it is filled
-        while len(children) < self.size:
+        #while len(children) < self.size:
+        for dummy in range(self.size-len(children)):
             children.append( self.species[0].generateChild(self.innovationHistory) )
 
         logger.info("Made %d new children from scratch(best species)" % (len(children)-oldchillen))
