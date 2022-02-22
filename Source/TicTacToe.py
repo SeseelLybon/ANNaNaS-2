@@ -59,10 +59,7 @@ genlabel = pyglet.text.Label('23423423',
                              color=(0,0,0, 255))
 
 def update(dt):
-    global curgame
-    global steps
-    global pop
-    global gamestep
+    global curgame, steps, pop, gamestep, maxgames
 
     logger.info("---------------------------------------")
     logger.info("New generation: %d" % pop.generation)
@@ -101,12 +98,13 @@ def update(dt):
 
     lasttime[1] = time.time()
     pop.naturalSelection()
+    maxgames = curgame
     logger.info("NaS took :%.2fs" % (time.time()-lasttime[1]));
     logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
 
 
-def pre_game(players)->tuple:
+def pre_game(players):
     global curgame, pop
     curgame+=1
     if curgame%gamestep==0:
@@ -135,7 +133,7 @@ def pre_game(players)->tuple:
             meep2.score += 80
             meep1.losex +=1
             meep2.wino +=1
-        return endgamestate
+        #return endgamestate
     elif endgamestate[0] == "Draw":
         meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0.25)
         meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0.75)
@@ -143,7 +141,7 @@ def pre_game(players)->tuple:
         meep2.score += 60
         meep1.drawx +=1
         meep2.drawo +=1
-        return endgamestate
+        #return endgamestate
 
     #meep1.score = meep1.rating.rating
     #meep2.score = meep1.rating.rating
@@ -158,7 +156,9 @@ def pre_game(players)->tuple:
             meep1.score += max([min([endgamestate[1]-2, 1]), 0])
             meep2.score += max([min([endgamestate[1]-1, 1]), 0])
             meep2.foulo +=1
-        return endgamestate
+        #return endgamestate
+    meep1.score = meep1.elo.rating;
+    meep2.score = meep2.elo.rating;
 
 
 
