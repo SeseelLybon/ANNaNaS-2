@@ -24,9 +24,9 @@ class Node:
 
     def fire(self, maxLayer:int) -> None:
         if self.layer == maxLayer:
-            self.outputValue = self.ReLU2(self.inputSum)
+            self.outputValue = self.Sine(self.inputSum)
         if self.layer != 0:
-            self.outputValue = self.ReLU2(self.inputSum)
+            self.outputValue = self.Sine(self.inputSum)
 
         for coni in range(len(self.outputConnections)):
             if self.outputConnections[coni].enabled:
@@ -76,6 +76,13 @@ class Node:
             return 0
         else:
             return 1
+
+    @staticmethod
+    def Cosine(x: float) -> float:
+        return math.cos(x)
+    @staticmethod
+    def Sine(x: float) -> float:
+        return math.sin(x)
 
 
 

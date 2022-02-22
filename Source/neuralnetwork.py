@@ -6,6 +6,7 @@ from typing import List
 import math
 import numpy as np
 from numpy.random import default_rng
+rng = default_rng()
 from itertools import combinations
 from node import Connection
 from node import Node
@@ -15,7 +16,6 @@ from pymunk import Vec2d
 import pyglet
 import pyglet.gl as pygl
 
-rng = default_rng()
 
 # NeuralNetwork = Genome
 
@@ -24,7 +24,6 @@ nextConnectionID:int = 10
 nextNeuralNetworkID:int = 10
 
 import colorlog
-import structlog
 import logging
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
