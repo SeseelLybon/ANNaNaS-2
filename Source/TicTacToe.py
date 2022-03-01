@@ -157,8 +157,8 @@ def pre_game(players):
             meep2.score += max([min([endgamestate[1]-1, 1]), 0])
             meep2.foulo +=1
         #return endgamestate
-    meep1.score = meep1.elo.rating;
-    meep2.score = meep2.elo.rating;
+    #meep1.score = meep1.elo.rating;
+    #meep2.score = meep2.elo.rating;
 
 
 
