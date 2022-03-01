@@ -7,11 +7,11 @@ from typing import List
 
 class Meeple:
     def __init__(self, braininputs:int, brainoutputs:int, isHollow=False):
-        self.score:int=0
-        self.fitness:float = 0
+        self.score:int=1 # 1 to prevent a devidebyZero x/averageSum in Population.naturalselection
+        self.fitness:float = 1
         self.unadjustedFitness:float = 0
-        self.vision:List[float] = list()
-        self.decision:List[float] = list()
+        self.visionVector:List[float] = list()
+        self.decisionVector:List[float] = list()
         self.lifespan:int = 0
         self.bestScore:int = 0
         self.isAlive:bool=True
@@ -49,7 +49,7 @@ class Meeple:
         max:float = 0
         maxIndex:int = 0
 
-        self.decision = self.brain.feedForward(vision)
+        self.decisionVector = self.brain.feedForward(vision)
 
         #for deci in range(len(self.decision)):
         #    if self.decision[deci] > max:

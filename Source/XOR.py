@@ -78,19 +78,19 @@ def update(dt):
             print("=",end="")
 
         player.think(vision=[0,0])
-        decision = player.decision
+        decision = player.decisionVector
         total= getScore(decision, expected[0])
 
         player.think(vision=[1,0])
-        decision = player.decision
+        decision = player.decisionVector
         total+= getScore(decision, expected[1])
 
         player.think(vision=[0,1])
-        decision = player.decision
+        decision = player.decisionVector
         total+= getScore(decision, expected[2])
 
         player.think(vision=[1,1])
-        decision = player.decision
+        decision = player.decisionVector
         total+= getScore(decision, expected[3])
 
         player.score = total
@@ -102,19 +102,19 @@ def update(dt):
             bestMeep = meep
     print()
     bestMeep.think(vision=[0,0])
-    decision = bestMeep.decision
+    decision = bestMeep.decisionVector
     print( "Expected %s, Got %.4f, Score %f" % (expected[0], decision[0], getScore(decision, expected[0])))
 
     bestMeep.think(vision=[1,0])
-    decision = bestMeep.decision
+    decision = bestMeep.decisionVector
     print( "Expected %s, Got %.4f, Score %s" % (expected[1], decision[0], getScore(decision, expected[1])))
 
     bestMeep.think(vision=[0,1])
-    decision = bestMeep.decision
+    decision = bestMeep.decisionVector
     print( "Expected %s, Got %.4f, Score %s" % (expected[2], decision[0], getScore(decision, expected[2])))
 
     bestMeep.think(vision=[1,1])
-    decision = bestMeep.decision
+    decision = bestMeep.decisionVector
     print( "Expected %s, Got %.4f, Score %s" % (expected[3], decision[0], getScore(decision, expected[3])))
 
     window.clear()
