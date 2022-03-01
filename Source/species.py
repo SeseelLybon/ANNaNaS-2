@@ -106,7 +106,7 @@ class Species:
             else:
                 child = parent2.crossover(parent1)
 
-        child.brain.mutate(innovationHistory)
+        child.brain.mutate(innovationHistory, staleness=self.staleness)
 
         return child
 

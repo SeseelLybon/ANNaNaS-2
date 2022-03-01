@@ -268,7 +268,7 @@ class NeuralNetwork:
         else:
             return False
 
-    def mutate(self, innovationHistory:List[ConnectionHistory])->None:
+    def mutate(self, innovationHistory:List[ConnectionHistory], staleness=0)->None:
         logger.debug("Mutating")
         if len(self.connections) == 0:
             logger.debug("No connections to mutate, adding new connection")
@@ -276,7 +276,13 @@ class NeuralNetwork:
 
         roll = rng.uniform()
 
-        if rng.uniform() < 0.01:
+        # Random thing that makes the population mutate the staler it gets.
+        if staleness == 0:
+            stalenessMod:float = 1
+        else:
+            stalenessMod:float = 1+staleness/500
+
+        if rng.uniform() < 0.01*stalenessMod:
             logger.debug("RNG: Add new node")
             prenoduples = getDuplicateConnections(self)
             self.addNode(innovationHistory)
@@ -284,7 +290,7 @@ class NeuralNetwork:
                 logger.fatal("Adding Node caused duplicate")
                 printDuplicateConnections(self)
 
-        if rng.uniform() < 0.05:
+        if rng.uniform() < 0.05*stalenessMod:
             logger.debug("RNG: Add new connection")
             prenoduples = getDuplicateConnections(self)
             self.addConnection(innovationHistory)
@@ -292,7 +298,7 @@ class NeuralNetwork:
                 logger.fatal("Adding Connection caused duplicate")
                 printDuplicateConnections(self)
 
-        if rng.uniform() < 0.80:
+        if rng.uniform() < 0.80*stalenessMod:
             logger.debug("RNG: Mutate weights")
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()
