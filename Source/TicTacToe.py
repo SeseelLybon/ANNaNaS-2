@@ -99,6 +99,7 @@ def update(dt):
     lasttime[1] = time.time()
     pop.naturalSelection()
     maxgames = curgame
+    gamestep = maxgames//steps
     logger.info("NaS took :%.2fs" % (time.time()-lasttime[1]));
     logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
@@ -212,27 +213,35 @@ def run_game(meep1, meep2, show=False)->tuple:
 
 
 def checkWinner(board, meep1, meep2)->int:
-
-    if board[0]+board[1]+board[2] == 3 or \
-            board[3]+board[4]+board[5] == 3 or \
-            board[6]+board[7]+board[8] == 3 or \
-            board[0]+board[3]+board[6] == 3 or \
-            board[1]+board[4]+board[7] == 3 or \
-            board[2]+board[5]+board[8] == 3 or \
-            board[0]+board[4]+board[8] == 3 or \
-            board[6]+board[4]+board[2] == 3:
-        return 1
-
-    if board[0]+board[1]+board[2] == -3 or \
-            board[3]+board[4]+board[5] == -3 or \
-            board[6]+board[7]+board[8] == -3 or \
-            board[0]+board[3]+board[6] == -3 or \
-            board[1]+board[4]+board[7] == -3 or \
-            board[2]+board[5]+board[8] == -3 or \
-            board[0]+board[4]+board[8] == -3 or \
-            board[6]+board[4]+board[2] == -3:
-        return 2
-
+    winner = 0
+    for dummy in range(1):
+        #test columns
+        if len({board[0], board[1], board[2]}) == 1:
+            if board[0] != 0:
+                return board[0]
+        if len({board[3], board[4], board[5]}) == 1:
+            if board[3] != 0:
+                return board[3]
+        if len({board[6], board[7], board[8]}) == 1:
+            if board[6] != 0:
+                return board[6]
+        #test rows
+        if len({board[0], board[3], board[6]}) == 1:
+            if board[0] != 0:
+                return board[0]
+        if len({board[1], board[4], board[7]}) == 1:
+            if board[1] != 0:
+                return board[1]
+        if len({board[2], board[5], board[8]}) == 1:
+            if board[2] != 0:
+                return board[2]
+        #test diagnals
+        if len({board[0], board[4], board[8]}) == 1:
+            if board[4] != 0:
+                return board[4]
+        if len({board[6], board[4], board[2]}) == 1:
+            if board[4] != 0:
+                return board[4]
     return 0
 
 
