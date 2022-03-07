@@ -290,7 +290,7 @@ class NeuralNetwork:
                 logger.fatal("Adding Node caused duplicate")
                 printDuplicateConnections(self)
 
-        if rng.uniform() < 0.05*stalenessMod:
+        elif rng.uniform() < 0.05*stalenessMod:
             logger.debug("RNG: Add new connection")
             prenoduples = getDuplicateConnections(self)
             self.addConnection(innovationHistory)
@@ -298,7 +298,7 @@ class NeuralNetwork:
                 logger.fatal("Adding Connection caused duplicate")
                 printDuplicateConnections(self)
 
-        if rng.uniform() < 0.80*stalenessMod:
+        elif rng.uniform() < 0.80*stalenessMod:
             logger.debug("RNG: Mutate weights")
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()

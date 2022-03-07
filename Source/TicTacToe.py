@@ -15,8 +15,9 @@ import pyglet
 
 from meeple import Meeple
 
-window = pyglet.window.Window(1200,800)
-pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+windowMain = pyglet.window.Window(1200, 800)
+windowMPL = pyglet.window.Window(1200,800)
+
 
 import colorlog
 import logging
@@ -30,20 +31,23 @@ from numpy.random import default_rng
 rng = default_rng()
 
 from population import Population
+from statistics import Statistics
 
 from itertools import combinations
 from itertools import permutations
 from typing import List
 from typing import Tuple
 
-popcap = 1000
-pop = Population(popcap, 11, 9)
 
 # [ x/bool, o/bool, 2:10 = board ]
 
+statswindow = Statistics()
+
+popcap = 1000
+pop = Population(popcap, 11, 9)
 curgame = 0
-steps = 100
-maxgames = sum(1 for dummy in combinations(pop.pop, 2))
+steps = 50
+maxgames = popcap
 #tempmg=0
 #for i in range(1,2,2):
 #    tempmg += maxgames//i
@@ -67,10 +71,6 @@ def update(dt):
     temptime = time.time()
     lasttime = [temptime for i in range(2)]
 
-    window.clear()
-    pop.pop[0].brain.drawNetwork(50,50,1150,750)
-    genlabel.text = "Generation: "+ str(pop.generation)
-    genlabel.draw()
 
     curgame = 0
 
@@ -80,29 +80,107 @@ def update(dt):
         print(" ", end="")
     print("|", maxgames, "/", gamestep, "/", steps)
 
-    # [{players}, winner, turns]
-    for i in range(1,8,2):
-        for players in combinations(list(range(popcap//i)), 2):
-            pre_game(players)
-        pop.pop.sort(key=lambda meep: meep.elo.rating, reverse=True)
+
+    # Game Section Start
+    matchviablemeepis:List[int] = list()
+
+    for i in range(popcap):
+        if cell_test(i):
+            matchviablemeepis.append(i);
+
+    if len(matchviablemeepis) >= 2: # can't match 1 or 0 meeps
+        # [{players}, winner, turns]
+        for i in range(1,8,2):
+            for players in combinations((matchviablemeepis[:len(matchviablemeepis)//i]), 2):
+                pre_game(players)
+            matchviablemeepis.sort(key=lambda meepi: pop.pop[meepi].elo.rating, reverse=True)
+    else:
+        logger.warning("No match viable meeples");
+
+
+    # Game Section End
+
+    maxgames = curgame;
+    gamestep = maxgames//steps
+    if gamestep < steps:
+        gamestep = steps
 
     print("")
     meep1:Meeple = pop.pop[0]
     meep2:Meeple = pop.pop[1]
-    logger.info("Meep1: %f %d %d %d %d %d %d %d %d" %
-                 (meep1.elo.rating, meep1.winx, meep1.wino, meep1.losex, meep1.loseo, meep1.drawx, meep1.drawo, meep1.foulx, meep1.foulo))
-    logger.info("Meep2: %f %d %d %d %d %d %d %d %d" %
-                 (meep2.elo.rating, meep2.winx, meep2.wino, meep2.losex, meep2.loseo, meep2.drawx, meep2.drawo, meep2.foulx, meep2.foulo))
+    logger.info("Meep1: %.1f %.3f" %
+                 (meep1.elo.rating, meep1.elo.uncertainty))
+    logger.info("Meep2: %.1f %.3f" %
+                 (meep2.elo.rating, meep2.elo.uncertainty))
 
     logger.info("Games took :%.2fs" % (time.time()-lasttime[0]));
 
     lasttime[1] = time.time()
     pop.naturalSelection()
-    maxgames = curgame
-    gamestep = maxgames//steps
     logger.info("NaS took :%.2fs" % (time.time()-lasttime[1]));
     logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
+    statswindow.update(pop.generation,
+                       pop.genscoresHistor_max,
+                       pop.genscoresHistor_cur,
+                       pop.scorehistogHistor,
+                       pop.speciesScoreHistogram);
+
+
+@windowMain.event
+def on_draw():
+    windowMain.clear()
+    pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+    pop.pop[0].brain.drawNetwork(50,50,1150,750)
+    genlabel.text = "Generation: "+ str(pop.generation)
+    genlabel.draw()
+
+@windowMPL.event
+def on_draw():
+    windowMPL.clear();
+    pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+    if statswindow.image is not None:
+        statswindow.image.blit(0,0);
+
+
+
+
+
+def cell_test(meepi:int) -> bool:
+
+    board = [0, 0, 0,
+             0, 0, 0,
+             0, 0, 0]
+    meep = pop.pop[meepi]
+
+    #if rng.random() < .5:
+    #    turn = "X"
+    #else:
+    #    turn = "O"
+    for turnstep in range(8):
+        meep.think(vision=[1,0]+board)
+        decision = meep.decision
+        index = decision.index(max(decision))
+        if board[index] == 0:
+            board[index] = 1
+            meep.score += 1
+        else:
+            return False;
+
+    board = [0, 0, 0,
+             0, 0, 0,
+             0, 0, 0]
+
+    for turnstep in range(8):
+        meep.think(vision=[0,1]+board)
+        decision = meep.decision
+        index = decision.index(max(decision))
+        if board[index] == 0:
+            board[index] = 2;
+            meep.score += 1;
+        else:
+            return False;
+    return True;
 
 
 def pre_game(players):
@@ -123,43 +201,18 @@ def pre_game(players):
         if endgamestate[2] == 1:
             meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 1)
             meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0)
-            meep1.score += 90
-            meep2.score += 60
-            meep1.winx +=1
-            meep2.loseo +=1
+            meep1.score += 100
         elif endgamestate[2] == 2:
             meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0)
             meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 1)
-            meep1.score += 50
-            meep2.score += 80
-            meep1.losex +=1
-            meep2.wino +=1
+            meep2.score += 100
         #return endgamestate
     elif endgamestate[0] == "Draw":
         meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0.25)
         meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0.75)
-        meep1.score += 50
-        meep2.score += 60
-        meep1.drawx +=1
-        meep2.drawo +=1
+        meep1.score += 25
+        meep2.score += 75
         #return endgamestate
-
-    #meep1.score = meep1.rating.rating
-    #meep2.score = meep1.rating.rating
-    elif endgamestate[0] == "Foul":
-        if endgamestate[2] == 1: # 2 caused the foul so gains less points
-            #meep2.elo.rating = ELO.newRating(meep1.elo.rating, ELO.winChance(meep1.elo.rating, meep2.elo.rating), 0.10)
-            meep1.score += max([min([endgamestate[1]-1, 1]), 0])
-            meep2.score += max([min([endgamestate[1]-2, 1]), 0])
-            meep1.foulx += 1
-        elif endgamestate[2] == 2:
-            #meep1.elo.rating = ELO.newRating(meep2.elo.rating, ELO.winChance(meep2.elo.rating, meep1.elo.rating), 0.10)
-            meep1.score += max([min([endgamestate[1]-2, 1]), 0])
-            meep2.score += max([min([endgamestate[1]-1, 1]), 0])
-            meep2.foulo +=1
-        #return endgamestate
-    #meep1.score = meep1.elo.rating;
-    #meep2.score = meep2.elo.rating;
 
 
 
@@ -167,14 +220,13 @@ def run_game(meep1, meep2, show=False)->tuple:
 
     board = [0, 0, 0,
              0, 0, 0,
-             0, 0, 0]
+             0, 0, 0];
 
-    #if rng.random() < .5:
-    #    turn = "X"
-    #else:
-    #    turn = "O"
-    turn = "X"
-    for turnstep in range(8):
+    board[rng.integers(0,8)] = 1;
+    # Force the first player to make a random move
+
+    turn = "O"
+    for turnstep in range(7):
         if turn == "X":
             meep1.think(vision=[1,0]+board)
             decision = meep1.decision

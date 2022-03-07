@@ -28,7 +28,6 @@ def winChance(Ra:Rating, Rb:Rating):
 class Rating:
 
     def __init__(self, rating:int=1000):
-        self.trueskill_debug = rng.integers(-2,5);
         self.wins = 0;
         self.loses = 0;
 
@@ -41,8 +40,7 @@ class Rating:
         return str({"rating":round(self.rating,2),
                     "uncertainty":round(self.uncertainty,2),
                     "wins":self.wins,
-                    "loses":self.loses,
-                    "trueskill":round(self.trueskill_debug,2)})
+                    "loses":self.loses})
 
     def newRating(self, winchance:float, winscore:float):
         if winscore > 0.5:
@@ -51,6 +49,7 @@ class Rating:
             self.loses+=1;
         #self.rating = self.rating+(ELO.Kfactor*self.uncertainty)* (winscore - winchance)
         self.rating = self.rating+ELO.Kfactor* (winscore - winchance)
+        self.newUncertainty(winchance, winscore)
 
     def newUncertainty(self, winchance:float, winscore:float):
         newuncertainty = self.uncertainty

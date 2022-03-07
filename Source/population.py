@@ -37,6 +37,11 @@ class Population:
         self.maxStaleness = 50 # how often a species can not improve before it's considered stale/stuck
         self.massExtinctionEvent = False
 
+        self.genscoresHistor_max:List[float] = [0 for i in range(1000)];
+        self.genscoresHistor_cur:List[float] = [0 for i in range(100)];
+        self.scorehistogHistor:List[List[float]] = [[0 for i in range(20)] for i in range(100)];
+        self.speciesScoreHistogram:List[List[float]] = list()
+
         for i in range(self.size):
             self.pop.append( Meeple(input_size, output_size) )
             self.pop[-1].brain.mutate(self.innovationHistory)
@@ -92,10 +97,8 @@ class Population:
 
     def naturalSelection(self):
 
+        self.updateStats()
         self.print_deathrate()
-        UnMassExtingtionEventsAttempt = 0
-        species_pre_speciate:int = -1
-        species_pre_cull:int = -1
 
         logger.info("Starting Natural Selection")
 
@@ -111,7 +114,7 @@ class Population:
             # Highest fitness in Specie
             # Average fitness of Specie
             id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,spec.bestFitness, spec.averageFitness))
-        id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:50];
+        id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:5];
 
         logger.info("Species %d %d %d %s" % ( self.size,
                                            sum([len(x.meeples) for x in self.species]),
@@ -122,10 +125,6 @@ class Population:
         logger.info("Sorting Species")
         self.calculateFitness()  # calc fitness of each meeple
         self.sortSpecies()  # sort all the species to the average fitness,best first. In the species sort by meeple's fitness
-
-        if self.massExtinctionEvent:
-            self.massExtingtion()
-            self.massExtinctionEvent = False
 
         # Clean the species
         logger.info("Culling Species")
@@ -255,60 +254,70 @@ class Population:
         for specie in self.species:
             specie.cull()
 
-    def massExtingtion(self) -> None:
-        self.species=self.species[:5]
+
+    def updateStats(self):
+
+
+        self.genscoresHistor_cur.append(max(meep.score for meep in self.pop[:]));
+        self.genscoresHistor_cur[:] = self.genscoresHistor_cur[-100:]
+
+        if self.genscoresHistor_max[-1] < self.genscoresHistor_cur[-1]:
+            self.genscoresHistor_max.append(self.genscoresHistor_cur[-1]);
+        else:
+            self.genscoresHistor_max.append(self.genscoresHistor_max[-1]);
+
+        self.genscoresHistor_max[:] = self.genscoresHistor_max[-1000:]
+
+
+
+        bins = 20
+        scorebin_cur = [0 for i in range(bins)];
+        maxscore = self.genscoresHistor_cur[-1]
+        step = maxscore/bins
+
+        for meep in self.pop:
+            for i in range(0,bins):
+                if step*i <= meep.score <= step*(i+1):
+                    scorebin_cur[i]+=1;
+                    break;
+            continue;
+
+        self.scorehistogHistor.append(scorebin_cur)
+        self.scorehistogHistor[:] = self.scorehistogHistor[-100:]
+
+
+        bins = 20
+        self.speciesScoreHistogram.clear()
+        if len(self.species) > 0:
+            for specie in self.species:
+                speciesscorebin = [0 for i in range(bins)]
+                maxscore = max([meep.score for meep in specie.meeples])
+                step = maxscore/bins
+
+                for meep in specie.meeples:
+                    for i in range(0,bins):
+                        if step*i <= meep.score <= step*(i+1):
+                            speciesscorebin[i]+=1;
+                            break;
+                    continue;
+                self.speciesScoreHistogram.append(speciesscorebin)
+        else:
+            self.speciesScoreHistogram.append([0 for i in range(bins)])
+
+        logger.info("scorebin bin:amount %s" % self.scorehistogHistor[-1]);
+
 
     def print_deathrate(self, do_print=True):
         if not do_print:
             return
-        # go through all meeps and add their score to a dict.
-        # pick the highest score and bins for every x% of score from the max
-        # print
-        scoredict = dict()
-        for meep in self.pop:
-            if meep.score in scoredict:
-                scoredict[meep.score] += 1
-            else:
-                scoredict[meep.score] = 1
 
-        highestscore = max(scoredict.keys())
-
-        scorebins = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0}
-        for meep in self.pop:
-            score = round( meep.score / max(highestscore*0.1, 1), 0)
-            if score in scorebins:
-                scorebins[score] += 1
-            else:
-                scorebins[score] = 1
-
-        newline:str = ""
         with open("spreadsheetdata.txt", "a") as f:
-            temp_string = ""
-            for value in scorebins.values():
-                temp_string+= "\t" + str(value)
-
-            f.write(str(time.time()) + "\t" +
-                    str(self.highestScore) + "\t" +
-                    str(max(self.pop, key=lambda kv: kv.score).score) + "\t" +
-                    str(self.generation) + "\n")# +
-                    #temp_string + "\n")
-            # Time, Highest score overall, highst score generation, generation, deathbin
-
-
-
-            #for specie in self.species[:max(10, len(self.species))]:
-            #    specie.sortSpecie()
-            #    newline += "\t" + \
-            #              str(specie.speciesID) + "\t" + \
-            #              str(len(specie.meeples)) + "\t" + \
-            #              str(specie.meeples[0].fitness) + "\t" + \
-            #              str(specie.meeples[len(specie.meeples)//2] ) + "\t" + \
-            #              str(specie.meeples[-1].fitness) + "\t" + \
-            #              str(specie.averageFitness) + "\t" + "\n"
-            #    f.write( newline )
-        #for key, value in sorted(scorebins.items(), key=lambda kv: kv[0]):
-        #    print(key,":",value, " - ")
-        logger.info("scorebin bin:amount %s" % sorted(scorebins.items(), key=lambda kv: kv[0]))
+            now = time.localtime();
+            f.write( "%d-%d  \t%d:%d:%d\t%.2f\t%.2f\t%d\n"
+                     % (now.tm_mday, now.tm_mon, now.tm_hour, now.tm_min, now.tm_sec,
+                        self.genscoresHistor_max[-1],
+                        self.genscoresHistor_cur[-1],
+                        self.generation))
 
 
 def deltaTimeS(last_time):

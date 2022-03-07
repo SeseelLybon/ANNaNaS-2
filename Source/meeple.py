@@ -7,8 +7,8 @@ from typing import List
 
 class Meeple:
     def __init__(self, braininputs:int, brainoutputs:int, isHollow=False):
-        self.score:int=0
-        self.fitness:float = 0
+        self.score:int=1
+        self.fitness:float = 1
         self.unadjustedFitness:float = 0
         self.vision:List[float] = list()
         self.decision:List[float] = list()

@@ -102,11 +102,14 @@ class Connection:
 
     def mutateWeight(self):
         rand1:float = rng.random()
-        if rand1 < .1: # 10% chance to drastically change the weight
+        if rand1 < .01: # 1% chance to drastically change the weight
             #self.weight = rng.uniform(-1,1)
             self.weight = rng.normal()
-        elif rand1 < .9: # 90% chance to slightly change the weight should make it more stable
+        elif rand1 < .25: # 90% chance to slightly change the weight should make it more stable
             self.weight += rng.normal()/50
+            #self.weight = np.min([1, np.max([self.weight, -1])])
+        elif rand1 < .75: # 90% chance to VERY slightly change the weight should make it more stable
+            self.weight += rng.normal()/100
             #self.weight = np.min([1, np.max([self.weight, -1])])
 
     def clone(self, fromNode:Node, toNode:Node) -> Connection:
