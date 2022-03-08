@@ -11,15 +11,8 @@ from neuralnetwork import ConnectionHistory
 
 import time
 
-import colorlog
-import structlog
-import logging
-handler = colorlog.StreamHandler()
-handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
-logger = colorlog.getLogger('population')
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
-
+import maintools
+log = maintools.colLogger("population")
 
 class Population:
 
@@ -100,9 +93,9 @@ class Population:
         self.updateStats()
         self.print_deathrate()
 
-        logger.info("Starting Natural Selection")
+        log.logger.info("Starting Natural Selection")
 
-        logger.info("Speciating")
+        log.logger.info("Speciating")
         species_pre_speciate = len(self.species)
         self.speciate()  # seperate the existing population into species for the purpose of natural selection
 
@@ -113,37 +106,37 @@ class Population:
             # How stale Specie is
             # Highest fitness in Specie
             # Average fitness of Specie
-            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,spec.bestFitness, spec.averageFitness))
+            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,round(spec.bestFitness,2), round(spec.averageFitness),2))
         id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:5];
 
-        logger.info("Species %d %d %d %s" % ( self.size,
+        log.logger.info("Species %d %d %d %s" % ( self.size,
                                            sum([len(x.meeples) for x in self.species]),
                                            len(self.species),
                                            id_s ) )
 
         species_pre_cull = len(self.species)
-        logger.info("Sorting Species")
+        log.logger.info("Sorting Species")
         self.calculateFitness()  # calc fitness of each meeple
         self.sortSpecies()  # sort all the species to the average fitness,best first. In the species sort by meeple's fitness
 
         # Clean the species
-        logger.info("Culling Species")
+        log.logger.info("Culling Species")
         self.cullSpecies()
         self.setBestMeeple()
 
-        logger.info("Killing Species")
+        log.logger.info("Killing Species")
         self.killStaleSpecies()
         self.killBadSpecies()
 
-        logger.info("highest score %.4f" % self.highestScore)
-        logger.info("highest fitness %.4f" % self.highestFitness)
+        log.logger.info("highest score %.4f" % self.highestScore)
+        log.logger.info("highest fitness %.4f" % self.highestFitness)
 
-        logger.info("Species %d:%d:%d" % (species_pre_speciate, species_pre_cull, len(self.species)))
+        log.logger.info("Species %d:%d:%d" % (species_pre_speciate, species_pre_cull, len(self.species)))
 
         self.bestMeeple = self.bestMeeple.clone()
         #self.bestMeeple.sprite.color = (0,200,100)
         children:List[Meeple] = [self.bestMeeple]
-        logger.info("Making new meeps from parents")
+        log.logger.info("Making new meeps from parents")
 
         averageSum = self.getAverageFitnessSum()
         for specie in self.species:
@@ -156,8 +149,8 @@ class Population:
             for i in range(newChildrenAmount):
                 children.append(specie.generateChild(self.innovationHistory))
 
-        logger.info("Made %d new children from parents" % (len(children)-1))
-        logger.info("Making new meeps from scratch")
+        log.logger.info("Made %d new children from parents" % (len(children)-1))
+        log.logger.info("Making new meeps from scratch")
 
         oldchillen = len(children)
         # If the pop-cap hasn't been filled yet, keep getting children from the best specie till it is filled
@@ -165,7 +158,7 @@ class Population:
         for dummy in range(self.size-len(children)):
             children.append( self.species[0].generateChild(self.innovationHistory) )
 
-        logger.info("Made %d new children from scratch(best species)" % (len(children)-oldchillen))
+        log.logger.info("Made %d new children from scratch(best species)" % (len(children)-oldchillen))
 
         self.pop[:] = children[:]
         self.generation += 1
@@ -193,7 +186,7 @@ class Population:
                 self.species.append(Species(meep=meep, speciesID=self.nextSpeciesID))
                 self.nextSpeciesID+=1
 
-        logger.info("Added %d new species" % (len(self.species)-temp))
+        log.logger.info("Added %d new species" % (len(self.species)-temp))
 
 
     def calculateFitness(self):
@@ -217,7 +210,7 @@ class Population:
         #self.species[:] = [ specie for specie in self.species if specie.staleness < self.maxStaleness]
 
         if prekill-len(self.species) > 0:
-            logger.warning("Killing %d stale species" % (prekill-len(self.species)))
+            log.logger.warning("Killing %d stale species" % (prekill-len(self.species)))
 
 
     def killBadSpecies(self):
@@ -239,7 +232,7 @@ class Population:
         self.species[:] = self.species[0:2] + [ specie for specie in self.species[2:] if averageSum > 0 and ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
 
         if prekill-len(self.species) > 0:
-            logger.warning("Killing %d bad species" % (prekill-len(self.species)))
+            log.logger.warning("Killing %d bad species" % (prekill-len(self.species)))
 
 
     #get the sum of averages from each specie
@@ -304,7 +297,7 @@ class Population:
         else:
             self.speciesScoreHistogram.append([0 for i in range(bins)])
 
-        logger.info("scorebin bin:amount %s" % self.scorehistogHistor[-1]);
+        log.logger.info("scorebin bin:amount %s" % self.scorehistogHistor[-1]);
 
 
     def print_deathrate(self, do_print=True):
@@ -322,17 +315,6 @@ class Population:
 
 def deltaTimeS(last_time):
     return int((time.time()-last_time)//60)
-
-
-
-
-
-
-
-
-
-
-
 
 
 

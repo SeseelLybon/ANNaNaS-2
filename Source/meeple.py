@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from neuralnetwork import NeuralNetwork
 import trueskill as ts
-import elo
 from typing import List
+
+from neuralnetwork import NeuralNetwork
+import elo
+import maintools
+log = maintools.colLogger("meeple")
 
 class Meeple:
     def __init__(self, braininputs:int, brainoutputs:int, isHollow=False):

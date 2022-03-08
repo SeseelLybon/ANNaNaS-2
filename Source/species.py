@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import math
-
 import numpy as np
-from numpy.random import default_rng
-rng = default_rng()
-
 from typing import List
 
 from neuralnetwork import NeuralNetwork
 from neuralnetwork import ConnectionHistory
-
+import maintools
+from maintools import rng
+log = maintools.colLogger("species")
 from meeple import Meeple
 
 class Species:

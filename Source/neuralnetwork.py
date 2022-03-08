@@ -5,11 +5,11 @@ from typing import List
 
 import math
 import numpy as np
-from numpy.random import default_rng
-rng = default_rng()
 from itertools import combinations
+
 from node import Connection
 from node import Node
+from maintools import rng
 
 from pymunk import Vec2d
 
@@ -23,13 +23,8 @@ import pyglet.gl as pygl
 nextConnectionID:int = 10
 nextNeuralNetworkID:int = 10
 
-import colorlog
-import logging
-handler = colorlog.StreamHandler()
-handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
-logger = colorlog.getLogger('neuralnetwork')
-logger.addHandler(handler)
-logger.setLevel(logging.WARNING)
+import maintools
+log = maintools.colLogger("neuralnetwork")
 
 class NeuralNetwork:
 
@@ -119,7 +114,7 @@ class NeuralNetwork:
             self.addConnection(innovationHistory)
             return
 
-        logger.debug("Adding new Node")
+        log.logger.debug("Adding new Node")
 
         # pick a random Connection that isn't with the Bias node, and disable it.
         rnglist =  list(range(len(self.connections)))
@@ -173,7 +168,7 @@ class NeuralNetwork:
 
         self.connectNodes()
 
-        logger.debug("Added new Node, replacing %d:%d with %d:%d:%d" % (self.connections[randomConnection].fromNode.ID,
+        log.logger.debug("Added new Node, replacing %d:%d with %d:%d:%d" % (self.connections[randomConnection].fromNode.ID,
                                                                         self.connections[randomConnection].toNode.ID,
                                                                         self.connections[randomConnection].fromNode.ID,
                                                                         newNodeNumber,
@@ -187,7 +182,7 @@ class NeuralNetwork:
         if self.isFullyConnected():
             #print("addConnection failed, can't add new connection to filled network")
             return
-        logger.debug("Adding new Connection")
+        log.logger.debug("Adding new Connection")
 
         # grab 2 nodes that don't have a connection
         rnglist = list( combinations(list(range(len(self.nodes))), 2))
@@ -202,7 +197,7 @@ class NeuralNetwork:
                 if not self.checkIfConnected(randomNode1, randomNode2):
                     break;
 
-        logger.debug("%s, %s : these meeps were considered non-duplicate" % (randomNode1, randomNode2))
+        log.logger.debug("%s, %s : these meeps were considered non-duplicate" % (randomNode1, randomNode2))
 
         if self.nodes[randomNode1].layer > self.nodes[randomNode2].layer:
             temp:int = randomNode2
@@ -214,7 +209,7 @@ class NeuralNetwork:
         self.connectNodes()
 
 
-        logger.debug("Added new Connection: %d:%d" % (randomNode1, randomNode2))
+        log.logger.debug("Added new Connection: %d:%d" % (randomNode1, randomNode2))
 
 
 
@@ -269,9 +264,9 @@ class NeuralNetwork:
             return False
 
     def mutate(self, innovationHistory:List[ConnectionHistory], staleness=0)->None:
-        logger.debug("Mutating")
+        log.logger.debug("Mutating")
         if len(self.connections) == 0:
-            logger.debug("No connections to mutate, adding new connection")
+            log.logger.debug("No connections to mutate, adding new connection")
             self.addConnection(innovationHistory)
 
         roll = rng.uniform()
@@ -283,23 +278,23 @@ class NeuralNetwork:
             stalenessMod:float = 1+staleness/500
 
         if rng.uniform() < 0.01*stalenessMod:
-            logger.debug("RNG: Add new node")
+            log.logger.debug("RNG: Add new node")
             prenoduples = getDuplicateConnections(self)
             self.addNode(innovationHistory)
             if len(getDuplicateConnections(self)) != len(prenoduples):
-                logger.fatal("Adding Node caused duplicate")
+                log.logger.fatal("Adding Node caused duplicate")
                 printDuplicateConnections(self)
 
         elif rng.uniform() < 0.05*stalenessMod:
-            logger.debug("RNG: Add new connection")
+            log.logger.debug("RNG: Add new connection")
             prenoduples = getDuplicateConnections(self)
             self.addConnection(innovationHistory)
             if len(getDuplicateConnections(self)) != len(prenoduples):
-                logger.fatal("Adding Connection caused duplicate")
+                log.logger.fatal("Adding Connection caused duplicate")
                 printDuplicateConnections(self)
 
         elif rng.uniform() < 0.80*stalenessMod:
-            logger.debug("RNG: Mutate weights")
+            log.logger.debug("RNG: Mutate weights")
             for conni in range(len(self.connections)):
                 self.connections[conni].mutateWeight()
 
@@ -530,13 +525,13 @@ def getDuplicateConnections(neuralnetwork:NeuralNetwork):
 
 def printDuplicateConnections(neuralnetwork:NeuralNetwork):
     duplicateconnections = getDuplicateConnections(neuralnetwork)
-    logger.fatal(duplicateconnections)
+    log.logger.fatal(duplicateconnections)
 
 
 
 if __name__ == "__main__":
 
-    logger.info("Starting neuralnetwork.py as main")
+    log.logger.info("Starting neuralnetwork.py as main")
 
     #p = cProfile.Profile()
     #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
@@ -548,16 +543,16 @@ if __name__ == "__main__":
     if doonce:
         innovationHistory:List[ConnectionHistory] = list()
 
-        logger.setLevel(logging.INFO)
+        log.logger.setLevel(log.logger.INFO)
 
         ANN1 = NeuralNetwork(9, 9)
         ANN1.generateNetwork()
-        logger.info("Made ANN1")
+        log.logger.info("Made ANN1")
         for dummy in range(100):
             ANN1.mutate(innovationHistory)
 
         output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
-        logger.info("ANN1 feedForward: %s" % output)
+        log.logger.info("ANN1 feedForward: %s" % output)
 
 
         ANN1.JSONstoreNeuralNetwork()
@@ -565,6 +560,6 @@ if __name__ == "__main__":
         ANN2:NeuralNetwork = NeuralNetwork.JSONloadNueralNetwork()
 
         output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
-        logger.info("ANN1 feedForward: %s" % output)
+        log.logger.info("ANN1 feedForward: %s" % output)
 
-    logger.info("Finished neuralnetwork.py as main")
+    log.logger.info("Finished neuralnetwork.py as main")

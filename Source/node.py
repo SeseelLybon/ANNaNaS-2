@@ -7,9 +7,9 @@ import numpy as np
 from typing import List
 from typing import NoReturn
 
-
-from numpy.random import default_rng
-rng = default_rng()
+import maintools
+from maintools import rng
+log = maintools.colLogger("node")
 
 class Node:
     def __init__(self, ID:int):
@@ -24,9 +24,9 @@ class Node:
 
     def fire(self, maxLayer:int) -> None:
         if self.layer == maxLayer:
-            self.outputValue = self.Sine(self.inputSum)
+            self.outputValue = self.ReLU1(self.inputSum)
         if self.layer != 0:
-            self.outputValue = self.Sine(self.inputSum)
+            self.outputValue = self.ReLU1(self.inputSum)
 
         for coni in range(len(self.outputConnections)):
             if self.outputConnections[coni].enabled:
@@ -64,14 +64,13 @@ class Node:
         return np.max([0, x])
     @staticmethod
     def ReLU2(x: float) -> float:
-        return max([0, min([x, 1])])
-        #if x > 1:
-        #    x = 1
-        #if x < 0:
-        #    x = 0
-        #return x
+        return max(0, min(x, 1))
     @staticmethod
-    def ReLU3(x: float) -> int:
+    def ReLU3(x: float) -> float:
+        return max(-1, min(x, 1))
+
+    @staticmethod
+    def ReLU4(x: float) -> int:
         if x <= 0:
             return 0
         else:
@@ -105,12 +104,10 @@ class Connection:
         if rand1 < .01: # 1% chance to drastically change the weight
             #self.weight = rng.uniform(-1,1)
             self.weight = rng.normal()
-        elif rand1 < .25: # 90% chance to slightly change the weight should make it more stable
+        else:# rand1 < .25: # 90% chance to slightly change the weight should make it more stable
             self.weight += rng.normal()/50
             #self.weight = np.min([1, np.max([self.weight, -1])])
-        elif rand1 < .75: # 90% chance to VERY slightly change the weight should make it more stable
-            self.weight += rng.normal()/100
-            #self.weight = np.min([1, np.max([self.weight, -1])])
+        min(1, max(-1, self.weight))
 
     def clone(self, fromNode:Node, toNode:Node) -> Connection:
         temp:Connection = Connection(fromNode, toNode, self.weight, self.innovationNumber)
