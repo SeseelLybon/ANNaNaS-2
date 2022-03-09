@@ -6,7 +6,6 @@ import math
 
 from meeple import Meeple
 from species import Species
-from neuralnetwork import NeuralNetwork
 from neuralnetwork import ConnectionHistory
 
 import time
@@ -30,8 +29,8 @@ class Population:
         self.maxStaleness = 50 # how often a species can not improve before it's considered stale/stuck
         self.massExtinctionEvent = False
 
-        self.genscoresHistor_max:List[float] = [0 for i in range(1000)];
-        self.genscoresHistor_cur:List[float] = [0 for i in range(100)];
+        self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
+        self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
         self.scorehistogHistor:List[List[float]] = [[0 for i in range(20)] for i in range(100)];
         self.speciesScoreHistogram:List[List[float]] = list()
 
@@ -50,9 +49,10 @@ class Population:
     def updateAlive(self):
         for meep in self.pop:
             if meep.isAlive:
-                meep.look()
-                meep.think()
-                meep.update()
+                #meep.look()
+                #meep.think()
+                #meep.update()
+                pass;
 
 
     #returns bool if all the players are dead or done
@@ -254,10 +254,13 @@ class Population:
         self.genscoresHistor_cur.append(max(meep.score for meep in self.pop[:]));
         self.genscoresHistor_cur[:] = self.genscoresHistor_cur[-100:]
 
-        if self.genscoresHistor_max[-1] < self.genscoresHistor_cur[-1]:
-            self.genscoresHistor_max.append(self.genscoresHistor_cur[-1]);
+        if len(self.genscoresHistor_max)==0:
+            self.genscoresHistor_max.append(self.genscoresHistor_cur[0]);
         else:
-            self.genscoresHistor_max.append(self.genscoresHistor_max[-1]);
+            if self.genscoresHistor_max[-1] < self.genscoresHistor_cur[-1]:
+                self.genscoresHistor_max.append(self.genscoresHistor_cur[-1]);
+            else:
+                self.genscoresHistor_max.append(self.genscoresHistor_max[-1]);
 
         self.genscoresHistor_max[:] = self.genscoresHistor_max[-1000:]
 
@@ -318,6 +321,22 @@ def deltaTimeS(last_time):
 
 
 
+import logging
+import unittest
+class TestPopulation(unittest.TestCase):
+    def setUp(self)->None:
+        log.logger.setLevel(logging.DEBUG)
+
+    def tearDown(self)->None:
+        pass;
+
+    #@unittest.expectedFailure
+    #def functioniexpecttofail(self):
+    #   pass;
+
+    #def someTest(self):
+    #    with self.subTest("example test"):
+    #        self.assertTrue(1==1);
 
 if __name__ == "__main__":
 

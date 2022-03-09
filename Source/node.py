@@ -34,7 +34,14 @@ class Node:
 
 
 
-    def isConnectedTo(self, node:Node) -> bool:
+    def isConnectedTo(self, node: Node) -> bool:
+        """Tests connection between self and node
+
+        Args:
+            node (Node): Node to check connection to
+        Returns:
+            bool: True if connected
+        """
         if node.layer == self.layer:
             return False
 
@@ -61,14 +68,26 @@ class Node:
         return 1 / (1 + math.e ** -x)
     @staticmethod
     def ReLU1(x: float) -> float:
-        return np.max([0, x])
+        if 0 > x:
+            x=0;
+        return x;
+        #return max(0, x) # Highly illigal, using floats in min/max
     @staticmethod
     def ReLU2(x: float) -> float:
-        return max(0, min(x, 1))
+        if 0 > x:
+            x=0;
+        elif x > 1:
+            x=1;
+        return x;
+        # return max(0, min(x, 1)) # Highly illigal, using floats in min/max
     @staticmethod
     def ReLU3(x: float) -> float:
-        return max(-1, min(x, 1))
-
+        if -1 > x:
+            x=-1;
+        elif x > 1:
+            x=1;
+        return x;
+        #return max(-1, min(x, 1)) # Highly illigal, using floats in min/max
     @staticmethod
     def ReLU4(x: float) -> int:
         if x <= 0:
@@ -100,8 +119,7 @@ class Connection:
         return str(self.innovationNumber)
 
     def mutateWeight(self):
-        rand1:float = rng.random()
-        if rand1 < .01: # 1% chance to drastically change the weight
+        if rng.uniform() < .01: # 1% chance to drastically change the weight
             #self.weight = rng.uniform(-1,1)
             self.weight = rng.normal()
         else:# rand1 < .25: # 90% chance to slightly change the weight should make it more stable
@@ -116,15 +134,55 @@ class Connection:
 
 
 
-if __name__ == "__main__":
 
-    import timeit
-    import cProfile
-    print("Starting node.py as main")
 
-    #p = cProfile.Profile()
-    #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
-    #p.runcall(oldbrain.fire_network)
-    #p.print_stats()
+import logging
+import unittest
+class TestNode(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        from logging import DEBUG
+        log.logger.setLevel(DEBUG);
 
-    print("Finished node.py as main")
+    def tearDown(self)->None:
+        pass;
+
+    #@unittest.expectedFailure
+    #def functioniexpecttofail(self):
+    #   pass;
+
+    def testActivation(self):
+        test = [2, 1, 0.5, 0, -0.5, -1, -2]
+
+        answer = [2, 1, 0.5, 0, 0, 0, 0]
+        with self.subTest("ReLU1"):
+            for t, a in zip(test, answer):
+                self.assertTrue(Node.ReLU1(t)==a, "%f:%f"%(t,a));
+
+        answer = [1, 1, 0.5, 0, 0, 0, 0]
+        with self.subTest("ReLU2"):
+            for t, a in zip(test, answer):
+                self.assertTrue(Node.ReLU2(t)==a, "%s:%s"%(t,a));
+
+        answer = [1, 1, 0.5, 0, -.5, -1, -1]
+        with self.subTest("ReLU3"):
+            for t, a in zip(test, answer):
+                self.assertTrue(Node.ReLU3(t)==a, "%f:%f"%(t,a));
+
+    def test_Node(self):
+        Node1 = Node(1);
+        Node2 = Node(2);
+        dummyOutconnectiong = Connection(Node1, Node2, 0.5, 1)
+
+
+        pass;
+
+    def test_Connection(self):
+        dummyNode = Node(1);
+        connection = Connection(dummyNode,dummyNode,0,1);
+        with self.subTest("MutateWeight"):
+            connection.mutateWeight();
+            self.assertFalse(connection.weight==0);
+            self.assertTrue(connection.weight>-1);
+            self.assertTrue(connection.weight<1);
+        pass;

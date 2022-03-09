@@ -399,7 +399,7 @@ class NeuralNetwork:
 
         # setup all the node positions
         for layeri in range(self.layers_amount):
-            x:int = int(startX+((layeri)*width)/
+            x:int = int(startX+(layeri*width)/
                         (self.layers_amount + 1.0))
             for nodei in range(len(allNodes[layeri])):
 

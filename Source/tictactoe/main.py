@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-
+import math
 
 from population import Population
 import maintools
@@ -11,15 +11,32 @@ from meeple import Meeple
 from typing import Tuple
 
 
-def TicTacToeMain(population:Population):
+def tictactoeMain(population:Population):
 
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        while cell_test2(meepi, population) and population.pop[meepi].score < 1*10**5: # score < 3 times 9!
+        while cell_test2(meepi, population) and population.pop[meepi].score < (math.factorial(9)): # score < 3 times 9!
             continue;
         while pre_game((population.bestMeeple, population.pop[meepi])) and pre_game((population.pop[meepi], population.bestMeeple)):
             continue;
 
+def cell_test3(meepi:int, population:Population) -> bool:
+    meep = population.pop[meepi]
+
+    board = list(rng.integers(0,3, [9])); # create a random board
+    while checkWinner(board): # check if it's a valid board (nobody won yet)
+        board = list(rng.integers(0,3, [9])); # create a random board
+
+    board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
+
+    meep.think(vision=[1,0]+board)
+    decision = meep.decision
+    index = decision.index(max(decision))
+    if board[index] == 0:
+        meep.score += 1
+        return True;
+    else:
+        return False;
 
 def cell_test2(meepi:int, population:Population) -> bool:
     meep = population.pop[meepi]
@@ -161,7 +178,6 @@ def run_game(meep1:Meeple, meep2:Meeple, show=False)->tuple:
 
 
 def checkWinner(board)->int:
-    winner = 0
     for dummy in range(1):
         #test columns
         if len({board[0], board[1], board[2]}) == 1:
@@ -193,11 +209,53 @@ def checkWinner(board)->int:
     return 0
 
 
-if __name__ == "__main__":
-    print("Start of TicTacToe")
 
 
 
 
+import unittest
+class Test_tictactoe(unittest.TestCase):
 
-    print("End of TicTacToe")
+    @classmethod
+    def setUpClass(cls) -> None:
+        from logging import DEBUG
+        log.logger.setLevel(DEBUG);
+
+    def setUp(self)->None:
+        pass;
+
+    def tearDown(self)->None:
+        pass;
+
+    def test_checkWinner(self):
+        boards_test = [ [0,0,0, 0,0,0, 0,0,0], # Nothing
+                        [1,1,1, 0,0,0, 0,0,0], # Horizontal
+                        [2,2,2, 0,0,0, 0,0,0],
+                        [0,0,0, 1,1,1, 0,0,0],
+                        [0,0,0, 2,2,2, 0,0,0],
+                        [0,0,0, 0,0,0, 1,1,1],
+                        [0,0,0, 0,0,0, 2,2,2],
+                        [1,0,0, 1,0,0, 1,0,0], # Vertical
+                        [2,0,0, 2,0,0, 2,0,0],
+                        [0,1,0, 0,1,0, 0,1,0],
+                        [0,2,0, 0,2,0, 0,2,0],
+                        [0,0,1, 0,0,1, 0,0,1],
+                        [0,0,2, 0,0,2, 0,0,2],
+                        [1,0,0, 0,1,0, 0,0,1], #Diagnal
+                        [2,0,0, 0,2,0, 0,0,2],
+                        [0,0,1, 0,1,0, 1,0,0],
+                        [0,0,2, 0,2,0, 2,0,0]];
+        boards_answers = [0, 1,2,1,2,1,2 ,1,2,1,2,1,2 ,1,2 ];
+
+        for t, a in zip(boards_test, boards_answers):
+            self.assertTrue(checkWinner(t)==a);
+
+    #@unittest.expectedFailure
+    #def functioniexpecttofail(self):
+    #   pass;
+
+    #def someTest(self):
+    #    with self.subTest("example test"):
+    #        self.assertTrue(1==1);
+
+

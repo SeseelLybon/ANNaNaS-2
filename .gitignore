@@ -137,3 +137,5 @@ Source/spreadsheetdata.txt
 Source/BestMeepleBrain.json
 
 Source/NeuralNetwork.json
+
+*.png

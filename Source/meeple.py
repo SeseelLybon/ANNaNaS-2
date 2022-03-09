@@ -49,8 +49,8 @@ class Meeple:
         return
 
     def think(self, vision)->None:
-        max:float = 0
-        maxIndex:int = 0
+        #maxi:float = 0
+        #maxIndex:int = 0
 
         self.decision = self.brain.feedForward(vision)
 

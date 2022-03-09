@@ -43,7 +43,8 @@ class Species:
     def addToSpecies(self, meep:Meeple):
         self.meeples.append(meep)
 
-    def getExcessDisjoint(self, brain1:NeuralNetwork, brain2:NeuralNetwork) -> float:
+    @staticmethod
+    def getExcessDisjoint(brain1:NeuralNetwork, brain2:NeuralNetwork) -> float:
         matching:float = 0
 
         for conni in range(len(brain1.connections)):
@@ -55,7 +56,8 @@ class Species:
         return len(brain1.connections) + len(brain2.connections) - (2 * matching)
 
     # Returns the average weight diffirence between meeples.
-    def averageWeightDiff(self, brain1:NeuralNetwork, brain2:NeuralNetwork) -> float:
+    @staticmethod
+    def averageWeightDiff(brain1:NeuralNetwork, brain2:NeuralNetwork) -> float:
         # if either has no genes - and thus there can be no matching
         if (len(brain1.connections) == 0) or (len(brain2.connections) == 0 ):
             return 0
@@ -92,7 +94,7 @@ class Species:
             self.staleness+=1
 
     def generateChild(self, innovationHistory:List[ConnectionHistory])->Meeple:
-        child:Meeple=None
+        child:Meeple;
 
         if rng.uniform() < 0.25:
             child = self.selectParent().clone()
@@ -181,8 +183,8 @@ class Species:
 
 
 if __name__ == "__main__":
-    import timeit
-    import cProfile
+    #import timeit
+    #import cProfile
 
     print("Starting species.py as main")
 

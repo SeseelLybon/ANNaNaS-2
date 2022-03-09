@@ -7,15 +7,16 @@ import time
 
 class colLogger:
     def __init__(self, name, level=logging.INFO):
-        handler = colorlog.StreamHandler()
-        handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
-        self.logger = colorlog.getLogger(name)
-        self.logger.addHandler(handler)
-        self.logger.setLevel(level)
+        handler = colorlog.StreamHandler();
+        handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'));
+        self.logger = colorlog.getLogger(name);
+        self.logger.addHandler(handler);
+        self.logger.setLevel(level);
+
+log = colLogger("maintools");
 
 from numpy.random import default_rng
 rng = default_rng()
-log = colLogger("maintools")
 
 
 class loadingBar:

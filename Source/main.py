@@ -7,6 +7,7 @@ import pyglet
 #import glooey
 
 import maintools
+import tictactoe.main
 from meeple import Meeple
 
 windowMain = pyglet.window.Window(1200, 800)
@@ -14,24 +15,19 @@ windowMPL = pyglet.window.Window(1200,800)
 
 log = maintools.colLogger(name="Main")
 
-from maintools import rng
-
 from population import Population
 from annstatistics import Statistics
 
-from itertools import combinations
-from itertools import permutations
-from typing import List
-from typing import Tuple
-
-from tictactoe import TicTacToeMain
-from xor import xorMain
+from tictactoe.main import tictactoeMain
+from xor.main import xorMain
+#from mastermind.main import mastermindMain
+#from dinorunner.main import dinorunnerMain
 
 statswindow = Statistics()
 
 popcap = 1000
-#population = Population(popcap, 11, 9) # tictactoe compatible population
-population = Population(popcap, 2, 1) #xor compatible population
+population = Population(popcap, 11, 9) # tictactoe compatible population
+#population = Population(popcap, 2, 1) #xor compatible population
 
 
 genlabel = pyglet.text.Label('23423423',
@@ -54,15 +50,15 @@ def update(dt):
 
     # Game Section Start
 
-    #TicTacToeMain(population);
-    xorMain(population);
+    tictactoe.main.tictactoeMain(population);
+    #xorMain(population);
 
     # bestMeep.brain.printNetwork()
 
-    if population.bestMeeple.score > 3999.99:
-        log.logger.fatal("Meep solved problem")
-        final_draw();
-        pyglet.app.exit();
+    #if population.bestMeeple.score > 39.999:
+    #    log.logger.fatal("Meep solved problem")
+    #    final_draw();
+    #    pyglet.app.exit();
 
     # Game Section End
 
@@ -123,10 +119,13 @@ def final_draw():
 
 @windowMain.event
 def on_key_press(symbol, modifiers):
-    if pyglet.window.key.BACKSPACE == symbol:
+    if symbol == pyglet.window.key.BACKSPACE:
         print("Final draw")
         final_draw();
         pyglet.app.exit()
+    elif symbol == pyglet.window.key.RETURN:
+        final_draw();
+        return;
 
 
 #def getScore(decision:List[float], expected:List[float]):

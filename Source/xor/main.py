@@ -22,7 +22,6 @@ def xorMain(population:Population):
     #expected = [[1],[0],[0],[1]]   # XNOR
     #expected = [[0],[1],[1],[1]]   # OR
     #expected = [[0],[0],[0],[1]]   # AND
-    #expected = [[0],[1],[1],[0]]
 
     for player in population.pop:
 
@@ -72,7 +71,7 @@ def getScore(decision:List[float], expected:List[float]):
     runningSum = 0
     for i in range(len(decision)):
         if ((decision[i] - expected[i])**2+1) != 0:
-            runningSum += 1000/((decision[i] - expected[i])**2+1)
+            runningSum += 10/((decision[i] - expected[i])**2+1)
     return runningSum
 
 
