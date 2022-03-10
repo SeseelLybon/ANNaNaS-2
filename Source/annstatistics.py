@@ -47,7 +47,8 @@ class Statistics:
         self.axis.append( self.figure.add_subplot(1,3,2, label="HistoHeatmap score history") )
         self.axis.append( self.figure.add_subplot(1,3,3, label="HistoHeatmap score species") )
 
-        self.axis[0].plot(range(curgen-len(genscoresmax),curgen), genscoresmax)
+        self.axis[0].plot(np.linespace(curgen-len(genscoresmax),curgen), genscoresmax, )
+        self.axis[0].plot(np.linespace(curgen-len(genscoresmax),curgen), np.polynomial.Polynomial(genscoresmax))
         self.axis[0].set_title("Best Score/total pop");
         #self.axis[0].set_xlabel("Generation");
         self.axis[0].set_ylabel("Score");

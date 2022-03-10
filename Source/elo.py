@@ -104,7 +104,7 @@ class Test_tictactoe(unittest.TestCase):
         from logging import DEBUG
         log.logger.setLevel(DEBUG);
         from numpy.random import default_rng
-        cls.rng = default_rng(11036)
+        cls.rng = default_rng(11037)
 
     def test_NewRating(self):
         winscores = list(rng.random([10]))

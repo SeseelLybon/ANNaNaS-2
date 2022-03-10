@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import math
+from itertools import combinations
+
 
 from population import Population
 import maintools
@@ -15,10 +17,24 @@ def tictactoeMain(population:Population):
 
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        while cell_test2(meepi, population) and population.pop[meepi].score < (math.factorial(9)): # score < 3 times 9!
+        while cell_test2(meepi, population) and population.pop[meepi].score <= (math.factorial(9)): # score < 3 times 9!
             continue;
-        while pre_game((population.bestMeeple, population.pop[meepi])) and pre_game((population.pop[meepi], population.bestMeeple)):
-            continue;
+        #population.pop[meepi].score /= math.factorial(9)
+        #population.pop[meepi].score *= 50
+
+    #population.pop.sort(key=lambda meep: meep.score, reverse=True)
+    #for meepi in range(population.size//4):
+    #    # sort by score
+    #    # play combinatory games against to x%
+    #    # sort by score
+    #    # play again
+    #    while pre_game((population.bestMeeple, population.pop[meepi])) and pre_game((population.pop[meepi], population.bestMeeple)):
+    #            continue;
+
+        #for i in range(1,8,2):
+        #    for players in combinations(list(range(popcap//i)), 2):
+        #        pre_game(players)
+        #    pop.pop.sort(key=lambda meep: meep.elo.rating, reverse=True)
 
 def cell_test3(meepi:int, population:Population) -> bool:
     meep = population.pop[meepi]

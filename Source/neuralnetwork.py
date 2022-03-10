@@ -528,6 +528,35 @@ def printDuplicateConnections(neuralnetwork:NeuralNetwork):
     log.logger.fatal(duplicateconnections)
 
 
+import logging
+import unittest
+class TestNode(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        from logging import DEBUG
+        log.logger.setLevel(DEBUG);
+        from numpy.random import default_rng
+        cls.rng = default_rng(11037)
+
+    def tearDown(self)->None:
+        pass;
+
+    #@unittest.expectedFailure
+    #def functioniexpecttofail(self):
+    #   pass;
+
+    def testActivation(self):
+        pass;
+
+    def test_Node(self):
+        pass;
+
+
+        pass;
+
+    def test_Connection(self):
+        pass;
+
 
 if __name__ == "__main__":
 
