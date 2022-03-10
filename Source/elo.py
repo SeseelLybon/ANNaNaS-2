@@ -8,7 +8,7 @@ from typing import List
 
 import maintools
 from maintools import rng
-log = maintools.colLogger("tictactoe")
+log = maintools.colLogger("elo")
 
 from itertools import combinations
 from numpy.random import default_rng

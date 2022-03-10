@@ -11,7 +11,7 @@ from typing import List
 
 import maintools
 from maintools import rng
-log = maintools.colLogger("tictactoe")
+log = maintools.colLogger("annstatistics")
 
 
 class Statistics:
@@ -42,23 +42,56 @@ class Statistics:
             scorehistospecies[i] = [ i/rowmax for i in scorehistospecies[i]];
             continue;
 
+        # Average for genscorescur
+        #log.logger.warning(genscorescur);
+        avg_i:int = 20 #average interval
+        l = len(genscorescur)
+        genscorescur_avg = [];
+        for scori in range(0,l+1,avg_i):
+            if l == 1:
+                genscorescur_avg.append( genscorescur[0] )
+                break;
+            elif scori == 0:
+                genscorescur_avg.append( genscorescur[0] )
+            elif scori%avg_i == 0:
+                genscorescur_avg.append( sum(genscorescur[scori-avg_i:scori+1])/avg_i );
+
+        if l%avg_i != 0:
+            genscorescur_avg.append( sum(genscorescur[l-l%avg_i:l+1])/
+                                     (l%avg_i) );
+
+
+
+        log.logger.warning(genscorescur_avg);
+
         self.axis.append( self.figure.add_subplot(2,3,1, label="Best Score this pop") )
         self.axis.append( self.figure.add_subplot(2,3,4, label="Best Score this gen") )
         self.axis.append( self.figure.add_subplot(1,3,2, label="HistoHeatmap score history") )
         self.axis.append( self.figure.add_subplot(1,3,3, label="HistoHeatmap score species") )
 
-        self.axis[0].plot(np.linespace(curgen-len(genscoresmax),curgen), genscoresmax, )
-        self.axis[0].plot(np.linespace(curgen-len(genscoresmax),curgen), np.polynomial.Polynomial(genscoresmax))
+        self.axis[0].plot(range(curgen-len(genscoresmax),curgen), genscoresmax)
+        #self.axis[0].plot(range(curgen-len(genscoresmax),curgen, 7), np.polynomial.poly1d( np.polynomial.Polynomial(genscoresmax).linspace()[0]));
         self.axis[0].set_title("Best Score/total pop");
         #self.axis[0].set_xlabel("Generation");
         self.axis[0].set_ylabel("Score");
         self.axis[0].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+
+        #list(range(curgen-len(genscorescur), curgen, 5)), genscorescur_avg
 
         self.axis[1].plot(range(curgen-len(genscorescur),curgen), genscorescur)#, width=1)
         self.axis[1].set_title("Best Score/gen");
         self.axis[1].set_xlabel("Generation");
         self.axis[1].set_ylabel("Score");
         self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+
+        axis1_2 = self.axis[1].twiny()
+        if len(genscorescur) < 100:
+            axis1_2.plot(list(range(0, l+1,avg_i))+list(range(l,l+l%avg_i,(l%avg_i)+1)),
+                         genscorescur_avg, color="tab:red")
+        else:
+            axis1_2.plot(list(range(0, l+1,avg_i)),
+                         genscorescur_avg, color="tab:red")
+        axis1_2.tick_params(axis="x", labelbottom=False);
 
         self.axis[2].pcolormesh(scorehistohist[::-1], cmap='hot', norm=mpl.colors.Normalize(vmin=0, vmax=500))
         self.axis[2].set_title("Histogram pop/gen");

@@ -5,7 +5,7 @@ import time
 
 import pyglet
 #import glooey
-
+import binarytodecimal.main
 import maintools
 import tictactoe.main
 from meeple import Meeple
@@ -13,20 +13,39 @@ from meeple import Meeple
 windowMain = pyglet.window.Window(1200, 800)
 windowMPL = pyglet.window.Window(1200,800)
 
-log = maintools.colLogger(name="Main")
+log = maintools.colLogger(name="main")
 
 from population import Population
 from annstatistics import Statistics
 
-from tictactoe.main import tictactoeMain
-from xor.main import xorMain
-#from mastermind.main import mastermindMain
-#from dinorunner.main import dinorunnerMain
+
+
+popcap = 1000
+game:str = "tictactoe";
+
+if game == "tictactoe":
+    from tictactoe.main import tictactoeMain
+    #population = Population(popcap, 11, 9) # tictactoe compatible population
+    population = Population(popcap, 2+9+9, 9) # tictactoe compatible population
+    #playgame = tictactoeMain;
+elif game == "xor":
+    from xor.main import xorMain
+    population = Population(popcap, 2, 1) # tictactoe compatible population
+elif game == "mastermind":
+    from mastermind.main import mastermindMain
+    population = Population(popcap, 33, 33) # tictactoe compatible population
+elif game == "dinorunner":
+    from dinorunner.main import dinorunnerMain
+    population = Population(popcap, 33, 3) # tictactoe compatible population
+elif game == "binarytodecimal":
+    from binarytodecimal.main import binarytodecimalMain;
+    population = Population(popcap, 3, 8) # tictactoe compatible population
+else:
+    log.logger.fatal("Game not found");
+    exit(-1);
 
 statswindow = Statistics()
 
-popcap = 1000
-population = Population(popcap, 11, 9) # tictactoe compatible population
 #population = Population(popcap, 2, 1) #xor compatible population
 
 
@@ -48,10 +67,17 @@ def update(dt):
 
     maintools.loadingbar.printLoadingbar()
 
-    # Game Section Start
-
-    tictactoe.main.tictactoeMain(population);
-    #xorMain(population);
+    if game == "tictactoe":
+        tictactoeMain(population)
+    elif game == "xor":
+        xorMain(population)
+    elif game == "mastermind":
+        from mastermind.main import mastermindMain
+        mastermindMain(population)
+    elif game == "dinorunner":
+        dinorunnerMain(population)
+    elif game == "binarytodecimal":
+        binarytodecimalMain(population)
 
     # bestMeep.brain.printNetwork()
 
@@ -108,13 +134,16 @@ def on_draw():
         statswindow.image.blit(-50,-50);
 
 def final_draw():
+    log.logger.warning("Printing screens");
     population.calculateFitness()
     population.setBestMeeple();
-
+    now = time.localtime();
     windowMain.switch_to()
-    pyglet.image.get_buffer_manager().get_color_buffer().save('windowMain.png')
+    pyglet.image.get_buffer_manager().get_color_buffer().save("screenshots/%d_%d %d_%d_%d windowMain.png"%
+                                                              (now.tm_mday, now.tm_mon, now.tm_hour, now.tm_min, now.tm_sec) )
     windowMPL.switch_to()
-    pyglet.image.get_buffer_manager().get_color_buffer().save('windowMPL.png')
+    pyglet.image.get_buffer_manager().get_color_buffer().save("screenshots/%d_%d %d_%d_%d windowMPL.png"%
+                                                              (now.tm_mday, now.tm_mon, now.tm_hour, now.tm_min, now.tm_sec) )
 
 
 @windowMain.event

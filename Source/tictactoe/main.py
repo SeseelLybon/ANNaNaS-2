@@ -13,23 +13,27 @@ from meeple import Meeple
 from typing import Tuple
 
 
+# Use "from this import *" ?
+
+
 def tictactoeMain(population:Population):
 
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        while cell_test2(meepi, population) and population.pop[meepi].score <= (math.factorial(9)): # score < 3 times 9!
+        while cell_test2(meepi, population) and population.pop[meepi].score <= (math.factorial(9)): # score 9!
             continue;
-        #population.pop[meepi].score /= math.factorial(9)
-        #population.pop[meepi].score *= 50
+        population.pop[meepi].score /= math.factorial(9)
+        population.pop[meepi].score *= 50
 
-    #population.pop.sort(key=lambda meep: meep.score, reverse=True)
-    #for meepi in range(population.size//4):
-    #    # sort by score
-    #    # play combinatory games against to x%
-    #    # sort by score
-    #    # play again
-    #    while pre_game((population.bestMeeple, population.pop[meepi])) and pre_game((population.pop[meepi], population.bestMeeple)):
-    #            continue;
+        if population.pop[meepi].score > 20: #2/5 points
+            #population.pop.sort(key=lambda meep: meep.score, reverse=True)
+            #for meepi in range(population.size//4):
+                # sort by score
+                # play combinatory games against to x%
+                # sort by score
+                # play again
+            while pre_game((population.bestMeeple, population.pop[meepi])) and pre_game((population.pop[meepi], population.bestMeeple)):
+                    continue;
 
         #for i in range(1,8,2):
         #    for players in combinations(list(range(popcap//i)), 2):
@@ -43,9 +47,10 @@ def cell_test3(meepi:int, population:Population) -> bool:
     while checkWinner(board): # check if it's a valid board (nobody won yet)
         board = list(rng.integers(0,3, [9])); # create a random board
 
-    board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
+    board[rng.integers(low=0,high=9)] = 0; # set a spot to 0 so it can always move
+    board_free = [ 1 if c == 0 else 0 for c in board ];
 
-    meep.think(vision=[1,0]+board)
+    meep.think(vision=[1,0]+board + board_free)
     decision = meep.decision
     index = decision.index(max(decision))
     if board[index] == 0:
@@ -62,8 +67,9 @@ def cell_test2(meepi:int, population:Population) -> bool:
         board = list(rng.integers(0,3, [9])); # create a random board
 
     board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
+    board_free = [ 1 if c == 0 else 0 for c in board ];
 
-    meep.think(vision=[1,0]+board)
+    meep.think(vision=[1,0]+board+board_free)
     decision = meep.decision
     index = decision.index(max(decision))
     if board[index] == 0:
@@ -266,6 +272,8 @@ class Test_tictactoe(unittest.TestCase):
         for t, a in zip(boards_test, boards_answers):
             self.assertTrue(checkWinner(t)==a);
 
+    def cell_test3(self):
+        pass;
     #@unittest.expectedFailure
     #def functioniexpecttofail(self):
     #   pass;
