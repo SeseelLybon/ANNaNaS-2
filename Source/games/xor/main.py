@@ -23,7 +23,7 @@ def xorMain(population:Population):
     #expected = [[0],[1],[1],[1]]   # OR
     #expected = [[0],[0],[0],[1]]   # AND
 
-    for player in population.pop:
+    for player in population.meeples:
 
         player.think(vision=[0,0])
         decision = player.decision
@@ -40,6 +40,8 @@ def xorMain(population:Population):
         player.think(vision=[1,1])
         decision = player.decision
         total+= getScore(decision, expected[3])
+
+        player.brain.train([[0,0],[1,0],[0,1],[1,1]],expected,0.00001);
 
         player.score = total
         continue
@@ -64,14 +66,24 @@ def xorMain(population:Population):
 
 
 
-
+#def getScore(decision:List[float], expected:List[float]):
+#    runningSum = 0
+#    for x in range(len(decision)):
+#        temp = -(decision[x] - expected[x])**3.2+400;
+#        if temp < 0:
+#            runningSum += 0;
+#        else:
+#            runningSum += temp;
+#    return runningSum
 
 
 def getScore(decision:List[float], expected:List[float]):
     runningSum = 0
     for i in range(len(decision)):
-        if ((decision[i] - expected[i])**2+1) != 0:
-            runningSum += 10/((decision[i] - expected[i])**2+1)
+        if ((decision[i] - expected[i])**2) != 0:
+            runningSum += 10000/((decision[i] - expected[i])**2+1)
+        else:
+            runningSum += 10;
     return runningSum
 
 

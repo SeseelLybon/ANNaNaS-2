@@ -17,6 +17,7 @@ class Node:
         self.inputSum:float = 0
         self.outputValue:float = 0
         self.outputConnections:List[Connection] = list()
+        self.inputConnections:List[Connection] = list()     # for backprop
         self.layer:int = 0
 
     def __repr__(self):

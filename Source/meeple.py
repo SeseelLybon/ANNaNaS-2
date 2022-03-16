@@ -18,7 +18,6 @@ class Meeple:
         self.lifespan:int = 0
         self.bestScore:int = 0
         self.isAlive:bool=True
-        self.generation = 0
         self.brainInputs:int = braininputs
         self.brainOutputs:int = brainoutputs
 
@@ -62,11 +61,7 @@ class Meeple:
     def clone(self)->Meeple:
         clone:Meeple = Meeple(self.brainInputs, self.brainOutputs)
         clone.brain = self.brain.clone()
-        clone.fitness = self.fitness
         clone.brain.generateNetwork()
-        clone.generation = self.generation
-        clone.bestScore = self.bestScore
-        clone.elo = self.elo
         return clone
 
     def calculateFitness(self)->None:

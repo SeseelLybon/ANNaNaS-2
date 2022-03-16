@@ -139,3 +139,5 @@ Source/BestMeepleBrain.json
 Source/NeuralNetwork.json
 
 *.png
+
+Source/dumps/

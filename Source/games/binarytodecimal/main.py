@@ -26,7 +26,7 @@ def binarytodecimalMain(population:Population):
                      [0,1,1],
                      [1,1,1]]);
     answer = np.linspace(0,test.shape[0]);
-    for meep in population.pop:
+    for meep in population.meeples:
         for t, a in zip(test, answer):
             meep.think(vision=[1,0]+board)
             decision = meep.decision

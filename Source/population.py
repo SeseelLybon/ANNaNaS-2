@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import uuid
 import numpy as np
 from typing import List
 import math
+
+import gym
 
 from meeple import Meeple
 from species import Species
@@ -12,12 +15,15 @@ import time
 
 import maintools
 log = maintools.colLogger("population")
+from maintools import rng
 
 class Population:
 
-    def __init__(self, pop_size:int, input_size:int, output_size:int ):
+    def __init__(self, pop_size:int, input_size:int, output_size:int, isHollow=False ):
+        self.UUID = uuid.uuid4();
+        #self.ID = str(rng.bytes(4));
         self.innovationHistory:List[ConnectionHistory] = list()
-        self.pop:List[Meeple] = list()
+        self.meeples:List[Meeple] = list()
         self.species:List[Species] = []
         self.nextSpeciesID = 0
 
@@ -26,8 +32,7 @@ class Population:
         self.output_size = output_size
         self.generation = 0
 
-        self.maxStaleness = 50 # how often a species can not improve before it's considered stale/stuck
-        self.massExtinctionEvent = False
+        self.maxStaleness = 100 # how often a species can not improve before it's considered stale/stuck
 
         self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
         self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
@@ -35,11 +40,11 @@ class Population:
         self.speciesScoreHistogram:List[List[float]] = list()
 
         for i in range(self.size):
-            self.pop.append( Meeple(input_size, output_size) )
-            self.pop[-1].brain.mutate(self.innovationHistory)
-            self.pop[-1].brain.generateNetwork()
+            self.meeples.append(Meeple(input_size, output_size))
+            self.meeples[-1].brain.mutate(self.innovationHistory)
+            self.meeples[-1].brain.generateNetwork()
 
-        self.bestMeeple:Meeple = self.pop[0]
+        self.bestMeeple:Meeple = self.meeples[0]
         self.highestFitness = 0
         self.highestScore = 0
 
@@ -47,7 +52,7 @@ class Population:
 
     #update all the meeps that are currently alive
     def updateAlive(self):
-        for meep in self.pop:
+        for meep in self.meeples:
             if meep.isAlive:
                 #meep.look()
                 #meep.think()
@@ -57,7 +62,7 @@ class Population:
 
     #returns bool if all the players are dead or done
     def isDone(self)-> bool:
-        for meep in self.pop:
+        for meep in self.meeples:
             #if meep.isAlive or not meep.isDone: # Doesn't work atm
             if meep.isAlive:
                 return False
@@ -65,7 +70,7 @@ class Population:
 
     def countAlive(self)->int:
         tot = 0
-        for meep in self.pop:
+        for meep in self.meeples:
             if meep.isAlive:
                 tot+=1
         return tot
@@ -78,18 +83,20 @@ class Population:
             maxFit = 0
 
         #go through all meeples in the population and test if their fitness is higher than the previous one
-        for meepi in range(len(self.pop)):
-            if self.pop[meepi].fitness > maxFit:
-                self.bestMeeple = self.pop[meepi]
-                self.highestFitness = self.pop[meepi].fitness
-                self.highestScore = self.pop[meepi].score
-                maxFit = self.pop[meepi].fitness
+        for meepi in range(self.size):
+            if self.meeples[meepi].fitness > maxFit:
+                self.bestMeeple = self.meeples[meepi]
+                self.highestFitness = self.meeples[meepi].fitness
+                self.highestScore = self.meeples[meepi].score
+                maxFit = self.meeples[meepi].fitness
 
-        self.bestMeeple.brain.JSONstoreNeuralNetwork(filepath="BestMeepleBrain.json")
 
 
     def naturalSelection(self):
-
+        for meep in self.meeples:
+            if meep.score <=0:
+                meep.score = 0;
+        
         self.updateStats()
         self.print_deathrate()
 
@@ -106,7 +113,7 @@ class Population:
             # How stale Specie is
             # Highest fitness in Specie
             # Average fitness of Specie
-            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,round(spec.bestFitness,2), round(spec.averageFitness),2))
+            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,round(spec.bestFitness,2), round(spec.averageFitness, 2)))
         id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:5];
 
         log.logger.info("Species %d %d %d %s" % ( self.size,
@@ -144,7 +151,7 @@ class Population:
             children.append(specie.bestMeeple.clone())
 
             #generate number of children based on how well the species is doing compared to the rest; the better the bigger.
-            newChildrenAmount = math.floor((specie.averageFitness/averageSum) * len(self.pop) ) -1
+            newChildrenAmount = math.floor((specie.averageFitness/averageSum) * self.size - 1);
 
             for i in range(newChildrenAmount):
                 children.append(specie.generateChild(self.innovationHistory))
@@ -160,10 +167,13 @@ class Population:
 
         log.logger.info("Made %d new children from scratch(best species)" % (len(children)-oldchillen))
 
-        self.pop[:] = children[:]
+        self.meeples[:] = children[:]
         self.generation += 1
 
-        for meep in self.pop:
+        self.bestMeeple.brain.JSONstoreNeuralNetwork(filepath="BestMeepleBrain.json")
+        self.population_dump();
+
+        for meep in self.meeples:
             meep.brain.generateNetwork()
 
 
@@ -174,7 +184,7 @@ class Population:
         for specie in self.species:
             specie.meeples.clear()
 
-        for meep in self.pop:
+        for meep in self.meeples:
             speciesfound = False
             for specie in self.species:
                 if specie.checkSameSpecies(meep, specie.bestMeeple):
@@ -190,7 +200,7 @@ class Population:
 
 
     def calculateFitness(self):
-        for meep in self.pop:
+        for meep in self.meeples:
             meep.calculateFitness()
 
 
@@ -229,7 +239,7 @@ class Population:
         averageSum = self.getAverageFitnessSum()
 
         #self.species[:] = [ specie for specie in self.species if ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
-        self.species[:] = self.species[0:2] + [ specie for specie in self.species[2:] if averageSum > 0 and ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
+        self.species[:] = self.species[0:2] + [specie for specie in self.species[2:] if averageSum > 0 and ((specie.averageFitness/averageSum) * self.size >= 1)]
 
         if prekill-len(self.species) > 0:
             log.logger.warning("Killing %d bad species" % (prekill-len(self.species)))
@@ -251,7 +261,7 @@ class Population:
     def updateStats(self):
 
 
-        self.genscoresHistor_cur.append(max(meep.score for meep in self.pop[:]));
+        self.genscoresHistor_cur.append(max(meep.score for meep in self.meeples[:]));
         self.genscoresHistor_cur[:] = self.genscoresHistor_cur[-100:]
 
         if len(self.genscoresHistor_max)==0:
@@ -271,7 +281,7 @@ class Population:
         maxscore = self.genscoresHistor_cur[-1]
         step = maxscore/bins
 
-        for meep in self.pop:
+        for meep in self.meeples:
             for i in range(0,bins):
                 if step*i <= meep.score <= step*(i+1):
                     scorebin_cur[i]+=1;
@@ -316,6 +326,46 @@ class Population:
                         self.generation))
 
 
+    def population_dump(self)->None:
+        # Note to self; not using serpent because of cirular dependancy. No idea how to solve it.
+
+        import jsonpickle
+        import jsonpickle.ext.numpy as jsonpickle_numpy
+
+        jsonpickle_numpy.register_handlers()
+        jsonpickle.set_encoder_options('json', indent=4)
+        #filepath = str(self.UUID)+".txt";
+        #filepath = "dumps/"+str(self.generation)+"_Population.json";
+        filepath = "dumps/"+"Population_"+str(self.generation%10)+".json";
+
+        with open(filepath, 'w') as file:
+            frozen = jsonpickle.encode(self)
+            file.write(frozen);
+
+    @staticmethod
+    def population_load(filepath:str) -> Population:
+        """
+
+        Args:
+            filepath: format: "dumps/+UUID+/generation_Population.json"
+
+        Returns:
+
+        """
+        import jsonpickle;
+        import jsonpickle.ext.numpy as jsonpickle_numpy;
+        jsonpickle_numpy.register_handlers();
+        jsonpickle.set_decoder_options('json');
+
+        with open(filepath, 'r') as file:
+            templines = file.readlines();
+
+        tempjoined = ''.join(templines);
+
+        thawed = jsonpickle.decode(tempjoined);
+
+        return thawed
+
 def deltaTimeS(last_time):
     return int((time.time()-last_time)//60)
 
@@ -329,6 +379,18 @@ class TestPopulation(unittest.TestCase):
 
     def tearDown(self)->None:
         pass;
+
+    def test_populationDump(self)->None:
+        testpop = Population(100,9,9);
+
+        with self.subTest("Population Dump"):
+            testpop.population_dump();
+            pass;
+
+        with self.subTest("Population Load"):
+            testpop2 = Population.population_load("dumps/0_"+"Population.txt")
+            pass;
+
 
     #@unittest.expectedFailure
     #def functioniexpecttofail(self):

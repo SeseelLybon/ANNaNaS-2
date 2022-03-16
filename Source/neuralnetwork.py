@@ -34,7 +34,7 @@ class NeuralNetwork:
         self.layers_amount:int = 2
         self.output_size:int = output_size
         self.nextNodeID:int = 0
-        self.biasNodeID:int
+        self.biasNodeID:int # bias is the last node in self.nodes
         if ID == -1:
             self.ID = nextNeuralNetworkID
             nextNeuralNetworkID+=1
@@ -56,10 +56,6 @@ class NeuralNetwork:
                 self.nodes[nodei].layer = 1
                 self.nextNodeID += 1
 
-            # Connect all inputs to outputs
-            #for nodei in range(self.input_size):
-            #    self.addConnection()
-
             self.nodes.append(Node(self.nextNodeID))
             self.biasNodeID = self.nextNodeID
             self.nextNodeID+=1
@@ -72,13 +68,15 @@ class NeuralNetwork:
                 return self.nodes[nodei]
         return None
 
-    def connectNodes(self) -> None:
-        for nodei in range(len(self.nodes)):
-            self.nodes[nodei].outputConnections.clear()
 
-        for conni in range(len(self.connections)):
-            self.connections[conni].fromNode.outputConnections.append(self.connections[conni])
+    def look(self, vision:List[float]):
+        # Set input nodes with vision vector
+        for nodei in range(self.input_size):
+            self.nodes[nodei].outputValue=vision[nodei]
+        self.nodes[self.biasNodeID].outputValue = 1
+        pass;
 
+    #def think(self, postClean=False):
     def feedForward(self, vision:List[float], postClean=True) -> List[float]:
 
         # Set input nodes with vision vector
@@ -94,10 +92,23 @@ class NeuralNetwork:
         for outi in range(self.input_size, self.input_size+self.output_size):
             outputValues.append(self.nodes[outi].outputValue)
 
-        for nodei in range(len(self.nodes)):
-            self.nodes[nodei].inputSum = 0
+        if postClean:
+            for nodei in range(len(self.nodes)):
+                self.nodes[nodei].inputSum = 0
 
         return outputValues
+
+    def getDecision(self)->List[float]:
+        return [self.nodes[i].outputValue for i in range(self.input_size, self.input_size+self.output_size)];
+
+    def connectNodes(self) -> None:
+        for nodei in range(len(self.nodes)):
+            self.nodes[nodei].outputConnections.clear()
+            self.nodes[nodei].inputConnections.clear()
+
+        for conni in range(len(self.connections)):
+            self.connections[conni].fromNode.outputConnections.append(self.connections[conni])
+            self.connections[conni].toNode.inputConnections.append(self.connections[conni]);
 
     def generateNetwork(self) -> None:
         self.connectNodes()
@@ -268,8 +279,6 @@ class NeuralNetwork:
         if len(self.connections) == 0:
             log.logger.debug("No connections to mutate, adding new connection")
             self.addConnection(innovationHistory)
-
-        roll = rng.uniform()
 
         # Random thing that makes the population mutate the staler it gets.
         if staleness == 0:
@@ -489,9 +498,101 @@ class NeuralNetwork:
 
         return thawed
 
-#   def serpent_serialize(self):
-#   def serpent_deserialize(self, pickledbrain):
 
+    def train(self, training_data:list, training_answers:list, learnrate:float=0.01)-> None:
+        assert len(training_data)==len(training_answers);
+        deltaimages:List[dict] = []
+        # create deltaimages
+        # A list of all deltaimages created.
+        for t_d, t_a in zip(training_data, training_answers):
+          deltaimages.append(self.createGDDeltaImage(t_d, t_a));
+
+        # combine all deltaimages into a summed image
+        finalDeltaImage = { con.innovationNumber:0 for con in self.connections};
+        for deltaimage in deltaimages:
+            for k in finalDeltaImage.keys():
+                finalDeltaImage[k] += deltaimage[k];
+
+        # make an average of the summed image
+        for k in finalDeltaImage.keys():
+            finalDeltaImage[k] /= len(deltaimages);
+
+        # apply finalDeltaImage
+        self.applyGDDeltaImage(learnrate, finalDeltaImage)
+        pass;
+
+
+    def createGDDeltaImage(self, training_input, training_answers) -> dict:
+        #if len(training_input) != self.input_size or len(training_answers)!= self.output_size:
+        #    log.logger.fatal("training input(%d) and output(%d) are note the same!"%(len(training_input), len(training_answers)));
+        #    assert False;
+
+        deltaimage:dict = { con.innovationNumber:0 for con in self.connections};
+
+        self.feedForward(training_input, postClean=False);
+
+        decision = self.getDecision();
+
+        # create stuff to keep track
+        # list of nudges per connection to be applied later
+        connectiongNudgeDict:dict = { con.innovationNumber:[] for con in self.connections};
+
+        #a_L-1
+        nodeNudgeDict = {node.ID:0 for node in self.network};
+
+        # start with appling the output error
+        for i in range(len(self.network)-1, len(self.network)-self.output_size-1, -1):
+
+            for con in self.network[i].inputConnections:
+                a_L1 = con.fromNode.outputValue;
+                w_L = con.weight;
+                d_a_L = 2*(con.toNode.outputValue-training_answers[len(self.network)-i-1]);
+
+                connectiongNudgeDict[con.innovationNumber].append( d_a_L * -1 * a_L1);
+                nodeNudgeDict[i] += d_a_L * w_L * a_L1;
+
+        # make delta image
+
+        # In reverse - as this is backprop
+        for nodi in range(len(self.network)-self.output_size-1, 0-1, -1):
+            #if self.network[nodi].layer == 0 or self.network[nodi].layer == self.layers_amount:
+            #    # just a lazy way to surcomvent setting the range() correctly
+            #    continue;
+
+            for con in self.network[nodi].inputConnections:
+                a_L1 = con.fromNode.outputValue;
+                w_L = con.weight;
+                d_a_L = 2*(con.toNode.outputValue-nodeNudgeDict[con.toNode.ID]); #
+
+                connectiongNudgeDict[con.innovationNumber].append( a_L1 * 1 * d_a_L );
+                nodeNudgeDict[nodi] += a_L1 * w_L * d_a_L;
+
+
+        for coniNu in connectiongNudgeDict.keys():
+            for nudge in connectiongNudgeDict[coniNu]:
+                if len(connectiongNudgeDict[coniNu]) >0:
+                    deltaimage[coniNu] = nudge/len(connectiongNudgeDict[coniNu]);
+
+        self.feedForward(training_input, postClean=True);
+
+        return deltaimage;
+
+    def applyGDDeltaImage(self, learnrate:float, deltaimage:dict)->None:
+        for con in self.connections:
+            #con.weight += deltaimage[con.innovationNumber]*learnrate;
+            con.weight += min(4,max(-4,deltaimage[con.innovationNumber]*learnrate));
+
+    def GDSigmoid(self,x):
+        return 1/(1+math.e**-x);
+
+    def costfunction(self, correct_output:np.array)->float:
+        assert correct_output.size == self.output_size;
+
+        total=0
+        for cor, out in zip(correct_output, self.getDecision()):
+            total+= (out - cor)**2
+
+        return total
 
 #Here because of circular dependancy
 class ConnectionHistory:
@@ -528,15 +629,15 @@ def printDuplicateConnections(neuralnetwork:NeuralNetwork):
     log.logger.fatal(duplicateconnections)
 
 
-import logging
 import unittest
-class TestNode(unittest.TestCase):
+class TestNeuralNetwork(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        from logging import DEBUG
-        log.logger.setLevel(DEBUG);
+        from logging import INFO
+        log.logger.setLevel(INFO);
         from numpy.random import default_rng
-        cls.rng = default_rng(11037)
+        #from maintools import rng
+        #cls.rng = default_rng(11037)
 
     def tearDown(self)->None:
         pass;
@@ -545,18 +646,72 @@ class TestNode(unittest.TestCase):
     #def functioniexpecttofail(self):
     #   pass;
 
-    def testActivation(self):
+    def test_Train(self):
+        testinnovationHistory = list();
+        testANN = NeuralNetwork(3,3)
+        for i in range(2000):
+            testANN.mutate(testinnovationHistory);
+        testANN.generateNetwork();
+        traindata = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
+        trainanswers = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
+
+        errorrate1 = 0;
+        for dat, ans in zip(traindata, trainanswers):
+            testANN.feedForward(dat);
+            deci = testANN.getDecision();
+            log.logger.info(deci);
+            for i in range(len(deci)):
+                errorrate1 += (deci[i]-ans[i])**2
+        log.logger.info(errorrate1);
+        for i in range(10):
+            testANN.train(traindata, trainanswers, 0.01);
+
+        errorrate2 = 0;
+        for dat, ans in zip(traindata, trainanswers):
+            testANN.feedForward(dat);
+            deci = testANN.getDecision();
+            log.logger.info(deci);
+            for i in range(len(deci)):
+                errorrate2 += (deci[i]-ans[i])**2
+        log.logger.info(errorrate2);
+
+        self.assertTrue(errorrate1 > errorrate2);
         pass;
 
-    def test_Node(self):
-        pass;
+    def test_createGDimage(self):
+        testinnovationHistory = list();
+        testANN = NeuralNetwork(3,3)
+        for i in range(100):
+            testANN.mutate(testinnovationHistory);
+        testANN.generateNetwork();
 
+        DI = testANN.createGDDeltaImage([1,1,1],[1,1,1]);
+        #print(DI)
+        # Cannot assert
 
-        pass;
+    def test_applyGDimage(self):
+        testinnovationHistory = list();
+        testANN = NeuralNetwork(3,3)
+        for i in range(100):
+            testANN.mutate(testinnovationHistory);
+        testANN.generateNetwork();
 
-    def test_Connection(self):
-        pass;
+        DI = testANN.createGDDeltaImage([1,1,1],[1,1,1]);
+        #print(DI)
+        preweights =[con.weight for con in testANN.connections]
+        #print(preweights);
+        testANN.applyGDDeltaImage(1, DI);
+        postweights = [con.weight for con in testANN.connections]
+        #print(postweights);
+        self.assertFalse(preweights==postweights);
 
+        postweightschange = [pre-post for pre, post in zip(postweights, preweights)];
+        #print(sorted(postweightschange))
+        #print(sorted(DI.values()))
+        #self.assertTrue(sorted(DI.values())==sorted(postweightschange));
+        for post, di in zip(sorted(DI.values()),sorted(postweightschange)):
+            self.assertAlmostEqual(post, di,
+                                   msg="%f - %f"%(post, di));
 
 if __name__ == "__main__":
 
@@ -570,15 +725,15 @@ if __name__ == "__main__":
 
     doonce = True
     if doonce:
-        innovationHistory:List[ConnectionHistory] = list()
+        test2innovationHistory:List[ConnectionHistory] = list()
 
         log.logger.setLevel(log.logger.INFO)
 
         ANN1 = NeuralNetwork(9, 9)
         ANN1.generateNetwork()
         log.logger.info("Made ANN1")
-        for dummy in range(100):
-            ANN1.mutate(innovationHistory)
+        for dummy in range(500):
+            ANN1.mutate(test2innovationHistory)
 
         output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
         log.logger.info("ANN1 feedForward: %s" % output)

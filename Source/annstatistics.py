@@ -43,7 +43,6 @@ class Statistics:
             continue;
 
         # Average for genscorescur
-        #log.logger.warning(genscorescur);
         avg_i:int = 20 #average interval
         l = len(genscorescur)
         genscorescur_avg = [];
@@ -54,7 +53,7 @@ class Statistics:
             elif scori == 0:
                 genscorescur_avg.append( genscorescur[0] )
             elif scori%avg_i == 0:
-                genscorescur_avg.append( sum(genscorescur[scori-avg_i:scori+1])/avg_i );
+                genscorescur_avg.append( sum(genscorescur[scori-avg_i:scori])/avg_i );
 
         if l%avg_i != 0:
             genscorescur_avg.append( sum(genscorescur[l-l%avg_i:l+1])/
@@ -62,13 +61,13 @@ class Statistics:
 
 
 
-        log.logger.warning(genscorescur_avg);
 
         self.axis.append( self.figure.add_subplot(2,3,1, label="Best Score this pop") )
         self.axis.append( self.figure.add_subplot(2,3,4, label="Best Score this gen") )
         self.axis.append( self.figure.add_subplot(1,3,2, label="HistoHeatmap score history") )
         self.axis.append( self.figure.add_subplot(1,3,3, label="HistoHeatmap score species") )
 
+        # Graph for maximum genscore
         self.axis[0].plot(range(curgen-len(genscoresmax),curgen), genscoresmax)
         #self.axis[0].plot(range(curgen-len(genscoresmax),curgen, 7), np.polynomial.poly1d( np.polynomial.Polynomial(genscoresmax).linspace()[0]));
         self.axis[0].set_title("Best Score/total pop");
@@ -76,14 +75,16 @@ class Statistics:
         self.axis[0].set_ylabel("Score");
         self.axis[0].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
-        #list(range(curgen-len(genscorescur), curgen, 5)), genscorescur_avg
 
+        # Graph for current genscore
         self.axis[1].plot(range(curgen-len(genscorescur),curgen), genscorescur)#, width=1)
         self.axis[1].set_title("Best Score/gen");
         self.axis[1].set_xlabel("Generation");
         self.axis[1].set_ylabel("Score");
         self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
+        # Graph for the average current genscore
+        log.logger.warning(genscorescur_avg);
         axis1_2 = self.axis[1].twiny()
         if len(genscorescur) < 100:
             axis1_2.plot(list(range(0, l+1,avg_i))+list(range(l,l+l%avg_i,(l%avg_i)+1)),
@@ -92,7 +93,9 @@ class Statistics:
             axis1_2.plot(list(range(0, l+1,avg_i)),
                          genscorescur_avg, color="tab:red")
         axis1_2.tick_params(axis="x", labelbottom=False);
+        axis1_2.tick_params(axis="x", labeltop=False);
 
+        # Histogram history of population score distribution
         self.axis[2].pcolormesh(scorehistohist[::-1], cmap='hot', norm=mpl.colors.Normalize(vmin=0, vmax=500))
         self.axis[2].set_title("Histogram pop/gen");
         self.axis[2].set_xlabel("Score Bin");
@@ -102,11 +105,13 @@ class Statistics:
         self.axis[2].yaxis.set_ticks(list(range(0, 101, 20)))
         self.axis[2].set_yticklabels(list(range(curgen, curgen-101, -20)))
 
+        # Histogram current per species score distribution
         self.axis[3].pcolormesh(scorehistospecies, cmap='hot')#, norm=mpl.colors.Normalize(vmin=0, vmax=1000))
         self.axis[3].set_title("Histogram score/species");
         self.axis[3].set_xlabel("Score Bin");
         self.axis[3].set_ylabel("Species");
         self.axis[3].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+        self.axis[3].yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
         canvas = FigureCanvasAgg(self.figure)
         data, (w, h) = canvas.print_to_buffer()
@@ -114,14 +119,14 @@ class Statistics:
 
 
 
-if __name__ == "__main__":
-    print("Start of statistics")
-    from tictactoe import checkWinner
-    for i in range(10):
-        board = list(rng.integers(0,3, [9])); # create a random board
-        while checkWinner(board): # check if it's a valid board (nobody won yet)
-            board = list(rng.integers(0,3, [9])); # create a random board
-
-        board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
-        print(board)
-    print("End of statistics")
+#if __name__ == "__main__":
+#    print("Start of statistics")
+#    from tictactoe import checkWinner
+#    for i in range(10):
+#        board = list(rng.integers(0,3, [9])); # create a random board
+#        while checkWinner(board): # check if it's a valid board (nobody won yet)
+#            board = list(rng.integers(0,3, [9])); # create a random board
+#
+#        board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
+#        print(board)
+#    print("End of statistics")

@@ -20,47 +20,23 @@ def tictactoeMain(population:Population):
 
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        while cell_test2(meepi, population) and population.pop[meepi].score <= (math.factorial(9)): # score 9!
+        while cell_test2(meepi, population) and population.meeples[meepi].score <= (math.factorial(9)): # score 9!
             continue;
-        population.pop[meepi].score /= math.factorial(9)
-        population.pop[meepi].score *= 50
 
-        if population.pop[meepi].score > 20: #2/5 points
-            #population.pop.sort(key=lambda meep: meep.score, reverse=True)
-            #for meepi in range(population.size//4):
-                # sort by score
-                # play combinatory games against to x%
-                # sort by score
-                # play again
-            while pre_game((population.bestMeeple, population.pop[meepi])) and pre_game((population.pop[meepi], population.bestMeeple)):
-                    continue;
+        while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
+            pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
+                continue;
 
         #for i in range(1,8,2):
         #    for players in combinations(list(range(popcap//i)), 2):
         #        pre_game(players)
         #    pop.pop.sort(key=lambda meep: meep.elo.rating, reverse=True)
 
-def cell_test3(meepi:int, population:Population) -> bool:
-    meep = population.pop[meepi]
 
-    board = list(rng.integers(0,3, [9])); # create a random board
-    while checkWinner(board): # check if it's a valid board (nobody won yet)
-        board = list(rng.integers(0,3, [9])); # create a random board
 
-    board[rng.integers(low=0,high=9)] = 0; # set a spot to 0 so it can always move
-    board_free = [ 1 if c == 0 else 0 for c in board ];
-
-    meep.think(vision=[1,0]+board + board_free)
-    decision = meep.decision
-    index = decision.index(max(decision))
-    if board[index] == 0:
-        meep.score += 1
-        return True;
-    else:
-        return False;
 
 def cell_test2(meepi:int, population:Population) -> bool:
-    meep = population.pop[meepi]
+    meep = population.meeples[meepi]
 
     board = list(rng.integers(0,3, [9])); # create a random board
     while checkWinner(board): # check if it's a valid board (nobody won yet)
@@ -80,7 +56,7 @@ def cell_test2(meepi:int, population:Population) -> bool:
 
 
 def cell_test(meepi:int, population:Population) -> bool:
-    meep = population.pop[meepi]
+    meep = population.meeples[meepi]
 
     board = [0, 0, 0,
              0, 0, 0,
@@ -129,21 +105,23 @@ def pre_game(players:Tuple[Meeple,Meeple]):
 
     endgamestate:tuple = run_game(meep1, meep2)
     #endgamestate = tuple(["Foul", 1, 1])
+    winchance1 = elo.winChance(meep1.elo, meep2.elo);
+    winchance2 = elo.winChance(meep2.elo, meep1.elo);
     if endgamestate[0] == "Winner":
         if endgamestate[2] == 1:
-            meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 1)
-            meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0)
-            meep1.score += 100
+            meep1.elo.newRating(winchance1, 1)
+            meep2.elo.newRating(winchance2, 0)
+            meep1.score += 100*winchance2
         elif endgamestate[2] == 2:
-            meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0)
-            meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 1)
-            meep2.score += 100
+            meep1.elo.newRating(winchance1, 0)
+            meep2.elo.newRating(winchance2, 1)
+            meep2.score += 100*winchance1
         return True
     elif endgamestate[0] == "Draw":
-        meep1.elo.newRating(elo.winChance(meep1.elo, meep2.elo), 0.25)
-        meep2.elo.newRating(elo.winChance(meep2.elo, meep1.elo), 0.75)
-        meep1.score += 25
-        meep2.score += 75
+        meep1.elo.newRating(winchance1, 0.25)
+        meep2.elo.newRating(winchance2, 0.75)
+        meep1.score += 25*winchance2
+        meep2.score += 75*winchance1
         return True
     return False
 
@@ -162,7 +140,9 @@ def run_game(meep1:Meeple, meep2:Meeple, show=False)->tuple:
     turn = "O"
     for turnstep in range(7):
         if turn == "X":
-            meep1.think(vision=[1,0]+board)
+            board_free = [ 1 if c == 0 else 0 for c in board ];
+
+            meep1.think(vision=[1,0]+board+board_free)
             decision = meep1.decision
             index = decision.index(max(decision))
             if show:
@@ -173,7 +153,9 @@ def run_game(meep1:Meeple, meep2:Meeple, show=False)->tuple:
                 return tuple(["Foul", turnstep, 2]) # 2 wins
             turn = "O"
         elif turn == "O":
-            meep2.think(vision=[0,1]+board)
+            board_free = [ 1 if c == 0 else 0 for c in board ];
+
+            meep2.think(vision=[1,0]+board+board_free)
             decision = meep2.decision
             index = decision.index(max(decision))
             if show:
