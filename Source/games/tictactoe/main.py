@@ -12,6 +12,11 @@ from meeple import Meeple
 
 from typing import Tuple
 
+#library for taking screenshots quickily
+#from mss import mss
+#
+#with mss() as sct:
+#    sct.shot()
 
 # Use "from this import *" ?
 
@@ -20,8 +25,14 @@ def tictactoeMain(population:Population):
 
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        while cell_test2(meepi, population) and population.meeples[meepi].score <= (math.factorial(9)): # score 9!
-            continue;
+        for i in range(1000):
+            if cell_test(meepi, population):
+                continue;
+            else:
+                break;
+
+        #while cell_test(meepi, population) and population.meeples[meepi].score <= (math.factorial(9)): # score 9!
+        #    continue;
 
         while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
             pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
@@ -54,6 +65,8 @@ def cell_test2(meepi:int, population:Population) -> bool:
     else:
         return False;
 
+celltestscoreX=[];
+celltestscoreO=[];
 
 def cell_test(meepi:int, population:Population) -> bool:
     meep = population.meeples[meepi]
@@ -61,34 +74,26 @@ def cell_test(meepi:int, population:Population) -> bool:
     board = [0, 0, 0,
              0, 0, 0,
              0, 0, 0]
-    board[rng.integers(0,9)] = 1;
+    #board[rng.integers(0,9)] = 1;
 
     #if rng.random() < .5:
     #    turn = "X"
     #else:
     #    turn = "O"
+    turn = "X";
     for turnstep in range(8):
-        meep.think(vision=[1,0]+board)
+        board_free = [ 1 if c == 0 else 0 for c in board ];
+
+        meep.think(vision=[1,0]+board+board_free)
         decision = meep.decision
         index = decision.index(max(decision))
         if board[index] == 0:
-            board[index] = 1
-            meep.score += 1
-        else:
-            return False;
-
-    board = [0, 0, 0,
-             0, 0, 0,
-             0, 0, 0]
-    board[rng.integers(0,9)] = 1;
-
-    for turnstep in range(8):
-        meep.think(vision=[0,1]+board)
-        decision = meep.decision
-        index = decision.index(max(decision))
-        if board[index] == 0:
-            board[index] = 2;
-            meep.score += 1;
+            if turn=="X":
+                board[index] = 1
+                meep.score += 2**turnstep;
+            elif turn=="O":
+                board[index] = 1
+                meep.score += 2**turnstep;
         else:
             return False;
     return True;
@@ -111,17 +116,17 @@ def pre_game(players:Tuple[Meeple,Meeple]):
         if endgamestate[2] == 1:
             meep1.elo.newRating(winchance1, 1)
             meep2.elo.newRating(winchance2, 0)
-            meep1.score += 100*winchance2
+            meep1.score += 10**6*winchance2
         elif endgamestate[2] == 2:
             meep1.elo.newRating(winchance1, 0)
             meep2.elo.newRating(winchance2, 1)
-            meep2.score += 100*winchance1
+            meep2.score += 10**7*winchance1
         return True
     elif endgamestate[0] == "Draw":
         meep1.elo.newRating(winchance1, 0.25)
         meep2.elo.newRating(winchance2, 0.75)
-        meep1.score += 25*winchance2
-        meep2.score += 75*winchance1
+        meep1.score += 10**4*winchance2
+        meep2.score += 10**5*winchance1
         return True
     return False
 

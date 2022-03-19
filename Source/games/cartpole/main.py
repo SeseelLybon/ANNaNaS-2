@@ -24,16 +24,13 @@ def cartpoleMain(population:Population):
         meep:Meeple = population.meeples[meepi];
 
 
-        observation:gym.Space = env.reset();
+        observation = env.reset();
         while True:
 
-            meep.think(vision=observation);
+            meep.think(vision=[observation[0]]+[observation[2]]);
             decision = meep.decision;
-
-            if decision[0] > decision[1]:
-                observation, reward, done, info = env.step(action=0); #push left
-            else:
-                observation, reward, done, info = env.step(action=1); #push right
+            decisionIndex = decision.index(max(decision));
+            observation, reward, done, info = env.step(action=decisionIndex); #push right
 
             meep.score += reward;
 
@@ -46,11 +43,8 @@ def cartpoleReplayBest(meep:Meeple):
 
         meep.think(vision=observation);
         decision = meep.decision;
-
-        if decision[0] > decision[1]:
-            observation, reward, done, info = env.step(action=0); #push left
-        else:
-            observation, reward, done, info = env.step(action=1); #push right
+        decisionIndex = decision.index(max(decision));
+        observation, reward, done, info = env.step(action=decisionIndex); #push right
 
         meep.score += reward;
         env.render();

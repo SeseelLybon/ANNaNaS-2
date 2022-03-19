@@ -31,7 +31,7 @@ class availgames(Enum):
 
 
 popcap = 1000
-game:availgames = availgames.acrobat;
+game:availgames = availgames.tictactoe;
 
 if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
@@ -50,7 +50,7 @@ elif game == availgames.blackjack:
     from games.blackjack.main import blackjackMain
     pass;
 elif game == availgames.cartpole:
-    population = Population(popcap, 4, 2) # tictactoe compatible population
+    population = Population(popcap, 2, 2) # tictactoe compatible population
     from games.cartpole.main import cartpoleMain
     from games.cartpole.main import cartpoleReplayBest
     pass;
