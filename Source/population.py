@@ -94,8 +94,8 @@ class Population:
 
     def naturalSelection(self):
         for meep in self.meeples:
-            if meep.score <=0:
-                meep.score = 0;
+            if meep.score <=1:
+                meep.score = 1;
         
         self.updateStats()
         self.print_deathrate()
@@ -146,15 +146,18 @@ class Population:
         log.logger.info("Making new meeps from parents")
 
         averageSum = self.getAverageFitnessSum()
-        for specie in self.species:
-            #add the best meeple of a specie to the new generation list
-            children.append(specie.bestMeeple.clone())
+        if averageSum > 1:
+            for specie in self.species:
+                #add the best meeple of a specie to the new generation list
+                children.append(specie.bestMeeple.clone())
 
-            #generate number of children based on how well the species is doing compared to the rest; the better the bigger.
-            newChildrenAmount = math.floor((specie.averageFitness/averageSum) * self.size - 1);
+                #generate number of children based on how well the species is doing compared to the rest; the better the bigger.
+                newChildrenAmount = math.floor((specie.averageFitness/averageSum) * self.size - 1);
 
-            for i in range(newChildrenAmount):
-                children.append(specie.generateChild(self.innovationHistory))
+                for i in range(newChildrenAmount):
+                    children.append(specie.generateChild(self.innovationHistory))
+        else:
+            log.logger.error("averageSum is 0, couldn't create a single meep from species");
 
         log.logger.info("Made %d new children from parents" % (len(children)-1))
         log.logger.info("Making new meeps from scratch")
@@ -170,7 +173,7 @@ class Population:
         self.meeples[:] = children[:]
         self.generation += 1
 
-        self.bestMeeple.brain.JSONstoreNeuralNetwork(filepath="BestMeepleBrain.json")
+        self.bestMeeple.brain.JSONStoreNeuralNetwork(filepath="BestMeepleBrain.json")
         self.population_dump();
 
         for meep in self.meeples:

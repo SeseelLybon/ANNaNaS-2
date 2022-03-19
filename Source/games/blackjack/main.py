@@ -13,11 +13,11 @@ from meeple import Meeple
 from typing import Tuple
 
 import gym
-
-
-
 env:gym.Env = gym.make("Blackjack-v1");
 env.reset();
+
+
+
 
 def blackjackMain(population:Population):
     global env

@@ -1,0 +1,138 @@
+{
+    "py/object": "neuralnetwork.NeuralNetwork",
+    "input_size": 4,
+    "layers_amount": 2,
+    "output_size": 2,
+    "nextNodeID": 7,
+    "ID": 10,
+    "connections": [
+        {
+            "py/object": "node.Connection",
+            "fromNode": {
+                "py/object": "node.Node",
+                "ID": 1,
+                "inputSum": 0,
+                "outputValue": 0,
+                "outputConnections": [
+                    {
+                        "py/id": 2
+                    }
+                ],
+                "inputConnections": [],
+                "layer": 0
+            },
+            "toNode": {
+                "py/object": "node.Node",
+                "ID": 4,
+                "inputSum": 0,
+                "outputValue": 0,
+                "outputConnections": [],
+                "inputConnections": [
+                    {
+                        "py/id": 2
+                    },
+                    {
+                        "py/object": "node.Connection",
+                        "fromNode": {
+                            "py/object": "node.Node",
+                            "ID": 2,
+                            "inputSum": 0,
+                            "outputValue": 0,
+                            "outputConnections": [
+                                {
+                                    "py/id": 9
+                                }
+                            ],
+                            "inputConnections": [],
+                            "layer": 0
+                        },
+                        "toNode": {
+                            "py/id": 6
+                        },
+                        "weight": -0.41457364112797707,
+                        "innovationNumber": 63,
+                        "enabled": true
+                    }
+                ],
+                "layer": 1
+            },
+            "weight": 0.013907285405241557,
+            "innovationNumber": 17,
+            "enabled": true
+        },
+        {
+            "py/id": 9
+        }
+    ],
+    "nodes": [
+        {
+            "py/object": "node.Node",
+            "ID": 0,
+            "inputSum": 0,
+            "outputValue": 0,
+            "outputConnections": [],
+            "inputConnections": [],
+            "layer": 0
+        },
+        {
+            "py/id": 3
+        },
+        {
+            "py/id": 10
+        },
+        {
+            "py/object": "node.Node",
+            "ID": 3,
+            "inputSum": 0,
+            "outputValue": 0,
+            "outputConnections": [],
+            "inputConnections": [],
+            "layer": 0
+        },
+        {
+            "py/id": 6
+        },
+        {
+            "py/object": "node.Node",
+            "ID": 5,
+            "inputSum": 0,
+            "outputValue": 0,
+            "outputConnections": [],
+            "inputConnections": [],
+            "layer": 1
+        },
+        {
+            "py/object": "node.Node",
+            "ID": 6,
+            "inputSum": 0,
+            "outputValue": 0,
+            "outputConnections": [],
+            "inputConnections": [],
+            "layer": 0
+        }
+    ],
+    "network": [
+        {
+            "py/id": 14
+        },
+        {
+            "py/id": 3
+        },
+        {
+            "py/id": 10
+        },
+        {
+            "py/id": 17
+        },
+        {
+            "py/id": 23
+        },
+        {
+            "py/id": 6
+        },
+        {
+            "py/id": 20
+        }
+    ],
+    "biasNodeID": 6
+}

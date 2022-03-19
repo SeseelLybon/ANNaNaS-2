@@ -21,7 +21,10 @@ class Meeple:
         self.brainInputs:int = braininputs
         self.brainOutputs:int = brainoutputs
 
-        self.brain = NeuralNetwork(braininputs, brainoutputs, isHollow)
+        if isHollow:
+            self.brain = None;
+        else:
+            self.brain:NeuralNetwork = NeuralNetwork(braininputs, brainoutputs, isHollow)
 
         self.trueskill = ts.Rating(15)
         self.elo = elo.Rating()

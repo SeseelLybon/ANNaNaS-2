@@ -472,30 +472,25 @@ class NeuralNetwork:
             nodeShape.draw()
             label.draw()
 
-    def JSONstoreNeuralNetwork(self, filepath="NeuralNetwork.json"):
+    def JSONStoreNeuralNetwork(self, filepath="NeuralNetwork.json"):
         import jsonpickle
         import jsonpickle.ext.numpy as jsonpickle_numpy
         jsonpickle_numpy.register_handlers()
         jsonpickle.set_encoder_options('json', indent=4)
-
         with open(filepath, 'w') as file:
             frozen = jsonpickle.encode(self)
             file.write(frozen)
 
     @staticmethod
-    def JSONloadNueralNetwork(filepath="NeuralNetwork.json") -> NeuralNetwork:
+    def JSONLoadNeuralNetwork(filepath="NeuralNetwork.json") -> NeuralNetwork:
         import jsonpickle;
         import jsonpickle.ext.numpy as jsonpickle_numpy;
         jsonpickle_numpy.register_handlers();
         jsonpickle.set_decoder_options('json');
-
         with open(filepath, 'r') as file:
             templines = file.readlines();
-
         tempjoined = ''.join(templines);
-
         thawed = jsonpickle.decode(tempjoined);
-
         return thawed
 
 
@@ -739,9 +734,9 @@ if __name__ == "__main__":
         log.logger.info("ANN1 feedForward: %s" % output)
 
 
-        ANN1.JSONstoreNeuralNetwork()
+        ANN1.JSONStoreNeuralNetwork()
 
-        ANN2:NeuralNetwork = NeuralNetwork.JSONloadNueralNetwork()
+        ANN2:NeuralNetwork = NeuralNetwork.JSONLoadNeuralNetwork()
 
         output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
         log.logger.info("ANN1 feedForward: %s" % output)

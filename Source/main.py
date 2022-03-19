@@ -26,10 +26,12 @@ class availgames(Enum):
     dinorunner = auto();
     hottercolder = auto();
     mastermind = auto();
+    cartpole = auto();
+    acrobat = auto();
 
 
 popcap = 1000
-game:availgames = availgames.tictactoe;
+game:availgames = availgames.acrobat;
 
 if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
@@ -46,6 +48,16 @@ elif game == availgames.hottercolder:
 elif game == availgames.blackjack:
     population = Population(popcap, 3, 1) # tictactoe compatible population
     from games.blackjack.main import blackjackMain
+    pass;
+elif game == availgames.cartpole:
+    population = Population(popcap, 4, 2) # tictactoe compatible population
+    from games.cartpole.main import cartpoleMain
+    from games.cartpole.main import cartpoleReplayBest
+    pass;
+elif game == availgames.acrobat:
+    population = Population(popcap, 6, 3) # tictactoe compatible population
+    from games.acrobat.main import acrobatMain
+    from games.acrobat.main import acrobatReplayBest
     pass;
 #elif game == "mastermind":
 #    from games.mastermind.main import mastermindMain
@@ -85,13 +97,23 @@ def update(dt):
 
     if game == availgames.tictactoe:
         tictactoeMain(population)
+        pass;
     elif game == availgames.xor:
         xorMain(population)
+        pass;
     elif game == availgames.hottercolder:
         hottercolderMain(population);
         pass;
     elif game == availgames.blackjack:
         blackjackMain(population);
+        pass;
+    elif game == availgames.cartpole:
+        cartpoleReplayBest(population.bestMeeple);
+        cartpoleMain(population);
+        pass;
+    elif game == availgames.acrobat:
+        acrobatReplayBest(population.bestMeeple);
+        acrobatMain(population)
         pass;
     #elif game == "mastermind":
     #    mastermindMain(population)
@@ -141,7 +163,8 @@ def update(dt):
 def on_draw():
     windowMain.clear()
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
-    population.bestMeeple.brain.drawNetwork(50, 50, 1100, 750)
+    #population.bestMeeple.brain.drawNetwork(50, 50, 1100, 750)
+    population.meeples[0].brain.drawNetwork(50, 50, 1100, 750)
     #population.pop[len(population.species) + 1].brain.drawNetwork(650, 50, 650, 750)
     genlabel.text = "Generation: "+ str(population.generation)
     genlabel.draw()

@@ -84,13 +84,13 @@ class Statistics:
         self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
         # Graph for the average current genscore
-        log.logger.warning(genscorescur_avg);
+        #log.logger.warning(genscorescur_avg);
         axis1_2 = self.axis[1].twiny()
         if len(genscorescur) < 100:
-            axis1_2.plot(list(range(0, l+1,avg_i))+list(range(l,l+l%avg_i,(l%avg_i)+1)),
+            axis1_2.step(list(range(0, l+1,avg_i))+list(range(l,l+l%avg_i,(l%avg_i)+1)),
                          genscorescur_avg, color="tab:red")
         else:
-            axis1_2.plot(list(range(0, l+1,avg_i)),
+            axis1_2.step(list(range(0, l+1,avg_i)),
                          genscorescur_avg, color="tab:red")
         axis1_2.tick_params(axis="x", labelbottom=False);
         axis1_2.tick_params(axis="x", labeltop=False);
