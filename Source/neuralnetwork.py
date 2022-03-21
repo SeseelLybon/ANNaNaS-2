@@ -93,7 +93,7 @@ class NeuralNetwork:
             outputValues.append(self.nodes[outi].outputValue)
 
         if postClean:
-            for nodei in range(len(self.nodes)):
+            self.resetinputs();
                 self.nodes[nodei].inputSum = 0
 
         return outputValues
@@ -109,6 +109,10 @@ class NeuralNetwork:
         for conni in range(len(self.connections)):
             self.connections[conni].fromNode.outputConnections.append(self.connections[conni])
             self.connections[conni].toNode.inputConnections.append(self.connections[conni]);
+
+    def resetinputs(self):
+        for nodei in range(len(self.nodes)):
+            self.nodes[nodei].inputSum = 0
 
     def generateNetwork(self) -> None:
         self.connectNodes()

@@ -50,11 +50,11 @@ class Meeple:
     def look(self, inputValues)->None:
         return
 
-    def think(self, vision)->None:
+    def think(self, vision, postClean=True)->None:
         #maxi:float = 0
         #maxIndex:int = 0
 
-        self.decision = self.brain.feedForward(vision)
+        self.decision = self.brain.feedForward(vision, postClean=postClean)
 
         #for deci in range(len(self.decision)):
         #    if self.decision[deci] > max:
