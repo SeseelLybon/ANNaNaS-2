@@ -257,7 +257,8 @@ class NeuralNetwork:
 
     def isFullyConnected(self)-> bool:
         maxConnections:int = 0
-        nodesInLayers:np.ndarray = np.zeros([self.layers_amount], int)
+        #nodesInLayers:np.ndarray = np.zeros([self.layers_amount], int)
+        nodesInLayers:List[int] = [0 for i in range(self.layers_amount)];
 
         for nodei in range(len(self.nodes)):
             nodesInLayers[self.nodes[nodei].layer] += 1
@@ -425,7 +426,7 @@ class NeuralNetwork:
         # draw all the connections
         for conni in range(len(self.connections)):
             if self.connections[conni].enabled:
-                pygl.glLineWidth(np.abs(int(self.connections[conni].weight*2))+1)
+                pygl.glLineWidth(abs(int(self.connections[conni].weight*2))+1)
             else:
                 continue
 
@@ -437,7 +438,7 @@ class NeuralNetwork:
                        0, 0, 255)
 
             fromNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].fromNode.ID ) ]
-            toNode_pos:np.Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].toNode.ID ) ]
+            toNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].toNode.ID ) ]
 
             pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
                                                             fromNode_pos.y,
@@ -580,7 +581,7 @@ class NeuralNetwork:
     def GDSigmoid(self,x):
         return 1/(1+math.e**-x);
 
-    def costfunction(self, correct_output:np.array)->float:
+    def costfunction(self, correct_output:list)->float:
         assert correct_output.size == self.output_size;
 
         total=0

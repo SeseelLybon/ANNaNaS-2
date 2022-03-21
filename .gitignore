@@ -141,3 +141,5 @@ Source/NeuralNetwork.json
 *.png
 
 Source/dumps/
+
+Source/profiledprofile.prof

@@ -112,8 +112,8 @@ if __name__ == "__main__":
 
 
     print("len: %s\n"%len(stats),           #len
-          "min: %s\n"%np.min(stats),           #min
-          "max: %s\n"%np.max(stats),           #max
+          "min: %s\n"%min(stats),           #min
+          "max: %s\n"%max(stats),           #max
           "mean: %s\n"%statistics.mean(stats),
           "median: %s\n"%statistics.median(stats),
           "mode: %s\n"%statistics.mode(stats),

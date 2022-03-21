@@ -69,7 +69,7 @@ class Species:
             for connj in range(len(brain2.connections)):
                 if brain1.connections[conni].innovationNumber == brain2.connections[connj].innovationNumber:
                     matching+=1
-                    totalDiff += np.absolute(brain1.connections[conni].weight - brain2.connections[connj].weight)
+                    totalDiff += abs(brain1.connections[conni].weight - brain2.connections[connj].weight)
                     break
 
         if matching == 0:
