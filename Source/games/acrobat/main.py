@@ -28,7 +28,7 @@ def acrobatMain(population:Population):
         meep.score = 500;
         while True:
 
-            meep.think(vision=observation);
+            meep.think(vision=observation, postClean=False);
             decision = meep.decision;
             decisionIndex = decision.index(max(decision));
             observation, reward, done, info = env.step(action=decisionIndex); #push right

@@ -94,7 +94,6 @@ class NeuralNetwork:
 
         if postClean:
             self.resetinputs();
-                self.nodes[nodei].inputSum = 0
 
         return outputValues
 
@@ -160,6 +159,9 @@ class NeuralNetwork:
                                            1,
                                            connectionInnovationNumber))
 
+        if not self.connections[randomConnection].isRecurrent:
+            self.connections[-1].isRecurrent = False
+
         # add a new connection to the new node with the weight of the disabled connection
         connectionInnovationNumber = self.getInnovationNumber(innovationHistory,
                                                               self.getNode(newNodeNumber),
@@ -168,32 +170,56 @@ class NeuralNetwork:
                                            self.connections[randomConnection].toNode,
                                            self.connections[randomConnection].weight,
                                            connectionInnovationNumber))
-        self.getNode(newNodeNumber).layer = self.connections[randomConnection].fromNode.layer + 1
+
+        if not self.connections[randomConnection].isRecurrent:
+            self.getNode(newNodeNumber).layer = self.connections[randomConnection].fromNode.layer + 1
+        else:
+            self.getNode(newNodeNumber).layer = self.connections[randomConnection].toNode.layer + 1
+            self.connections[-1].isRecurrent = True
 
         # add new connection to the Bias node
         connectionInnovationNumber = self.getInnovationNumber(innovationHistory, self.getNode(self.biasNodeID), self.getNode(newNodeNumber))
         self.connections.append(Connection(self.getNode(self.biasNodeID), self.getNode(newNodeNumber) ,0 ,connectionInnovationNumber ) )
 
         # add a new layer if needed
-        if self.getNode(newNodeNumber).layer == self.connections[randomConnection].toNode.layer:
-            for nodei in range(len(self.nodes)-1):
-                if self.nodes[nodei].layer >= self.getNode(newNodeNumber).layer:
-                    self.nodes[nodei].layer+=1
-            self.layers_amount+=1
+        if not self.connections[randomConnection].isRecurrent:
+            if self.getNode(newNodeNumber).layer == self.connections[randomConnection].toNode.layer:
+                for nodei in range(len(self.nodes)-1):
+                    if self.nodes[nodei].layer >= self.getNode(newNodeNumber).layer:
+                        self.nodes[nodei].layer+=1
+                self.layers_amount+=1
+        else:
+            if self.getNode(newNodeNumber).layer == self.connections[randomConnection].fromNode.layer:
+                for nodei in range(len(self.nodes)-1):
+                    if self.nodes[nodei].layer >= self.getNode(newNodeNumber).layer:
+                        self.nodes[nodei].layer+=1
+                self.layers_amount+=1
 
         self.connectNodes()
 
-        log.logger.debug("Added new Node, replacing %d:%d with %d:%d:%d" % (self.connections[randomConnection].fromNode.ID,
-                                                                        self.connections[randomConnection].toNode.ID,
-                                                                        self.connections[randomConnection].fromNode.ID,
-                                                                        newNodeNumber,
-                                                                        self.connections[randomConnection].toNode.ID))
+        log.logger.debug("Added new Node, replacing %d:%d with %d:%d:%d - %s:%s" % (self.connections[randomConnection].fromNode.ID,
+                                                                                    self.connections[randomConnection].toNode.ID,
+                                                                                    self.connections[randomConnection].fromNode.ID,
+                                                                                    newNodeNumber,
+                                                                                    self.connections[randomConnection].toNode.ID,
+                                                                                    self.connections[-2].isRecurrent,
+                                                                                    self.connections[-3].isRecurrent))
 
 
 
 
 
     def addConnection(self, innovationHistory:List[ConnectionHistory]) -> None:
+
+        recurrentRNG = rng.uniform()
+        isRecurrent = False
+        if recurrentRNG < 0.10:
+            log.logger.debug("Adding new Recurrent Connection")
+            isRecurrent = True
+        else:
+            log.logger.debug("Adding new Connection")
+
+
         if self.isFullyConnected():
             #print("addConnection failed, can't add new connection to filled network")
             return
@@ -212,19 +238,29 @@ class NeuralNetwork:
                 if not self.checkIfConnected(randomNode1, randomNode2):
                     break;
 
-        log.logger.debug("%s, %s : these meeps were considered non-duplicate" % (randomNode1, randomNode2))
+        log.logger.debug("%s, %s : these connections were considered non-duplicate" % (randomNode1, randomNode2))
 
-        if self.nodes[randomNode1].layer > self.nodes[randomNode2].layer:
-            temp:int = randomNode2
-            randomNode2 = randomNode1
-            randomNode1 = temp
+        if randomNode1 == self.biasNodeID or randomNode2 == self.biasNodeID:
+            isRecurrent = False;
+
+        if not isRecurrent: # got to make sure connection goes forwards
+            if self.nodes[randomNode1].layer > self.nodes[randomNode2].layer:
+                temp:int = randomNode2
+                randomNode2 = randomNode1
+                randomNode1 = temp
+        else: # got to make sure connection goes backwards
+            if self.nodes[randomNode1].layer < self.nodes[randomNode2].layer:
+                temp:int = randomNode2
+                randomNode2 = randomNode1
+                randomNode1 = temp
+
 
         connectionInnovationNumber:int = self.getInnovationNumber(innovationHistory, self.nodes[randomNode1], self.nodes[randomNode2])
         self.connections.append( Connection(self.nodes[randomNode1], self.nodes[randomNode2], rng.uniform(-1,1), connectionInnovationNumber) )
         self.connectNodes()
 
 
-        log.logger.debug("Added new Connection: %d:%d" % (randomNode1, randomNode2))
+        log.logger.debug("Added new Connection: %d:%d - recurrent: %s" % (randomNode1, randomNode2, self.connections[-1].isRecurrent))
 
 
 
@@ -293,19 +329,11 @@ class NeuralNetwork:
 
         if rng.uniform() < 0.01*stalenessMod:
             log.logger.debug("RNG: Add new node")
-            prenoduples = getDuplicateConnections(self)
             self.addNode(innovationHistory)
-            if len(getDuplicateConnections(self)) != len(prenoduples):
-                log.logger.fatal("Adding Node caused duplicate")
-                printDuplicateConnections(self)
 
         elif rng.uniform() < 0.05*stalenessMod:
             log.logger.debug("RNG: Add new connection")
-            prenoduples = getDuplicateConnections(self)
             self.addConnection(innovationHistory)
-            if len(getDuplicateConnections(self)) != len(prenoduples):
-                log.logger.fatal("Adding Connection caused duplicate")
-                printDuplicateConnections(self)
 
         elif rng.uniform() < 0.80*stalenessMod:
             log.logger.debug("RNG: Mutate weights")
@@ -433,22 +461,37 @@ class NeuralNetwork:
                 pygl.glLineWidth(abs(int(self.connections[conni].weight*2))+1)
             else:
                 continue
-
-            if self.connections[conni].weight >=0:
-                col = (255, 0, 0, #red/positive weight
-                       255, 0, 0)
+            if not self.connections[conni].isRecurrent:
+                if self.connections[conni].weight >=0:
+                    col = (255, 0, 0, #red/positive weight
+                           255, 0, 0)
+                else:
+                    col = (0, 0, 255, #blue/negative weight
+                           0, 0, 255)
             else:
-                col = (0, 0, 255, #blue/negative weight
-                       0, 0, 255)
+                if self.connections[conni].weight >=0:
+                    col = (255, 255, 0, #yellow/positive weight
+                           255, 255, 0)
+                else:
+                    col = (0, 255, 0, #green/negative weight
+                           0, 255, 0)
 
             fromNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].fromNode.ID ) ]
             toNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].toNode.ID ) ]
 
-            pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
-                                                            fromNode_pos.y,
-                                                            toNode_pos.x,
-                                                            toNode_pos.y) ),
-                                                            ('c3B', col))
+            if not self.connections[conni].isRecurrent:
+                pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
+                                                                fromNode_pos.y+2,
+                                                                toNode_pos.x,
+                                                                toNode_pos.y+2) ),
+                                                                ('c3B', col))
+            else:
+                pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
+                                                                fromNode_pos.y-2,
+                                                                toNode_pos.x,
+                                                                toNode_pos.y-2) ),
+                                     ('c3B', col))
+
         # Draw all nodes (and ID's)
 
         label = pyglet.text.Label('23423423',
@@ -586,7 +629,7 @@ class NeuralNetwork:
         return 1/(1+math.e**-x);
 
     def costfunction(self, correct_output:list)->float:
-        assert correct_output.size == self.output_size;
+        assert len(correct_output) == self.output_size;
 
         total=0
         for cor, out in zip(correct_output, self.getDecision()):
@@ -633,8 +676,8 @@ import unittest
 class TestNeuralNetwork(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        from logging import INFO
-        log.logger.setLevel(INFO);
+        from logging import DEBUG
+        log.logger.setLevel(DEBUG);
         from numpy.random import default_rng
         #from maintools import rng
         #cls.rng = default_rng(11037)
@@ -646,6 +689,40 @@ class TestNeuralNetwork(unittest.TestCase):
     #def functioniexpecttofail(self):
     #   pass;
 
+    def test_basebehaviour(self):
+        testinnovationHistory = list();
+        testANN = NeuralNetwork(3,3)
+        for i in range(100):
+            testANN.mutate(testinnovationHistory);
+        testANN.generateNetwork();
+        #testANN.printNetwork();
+
+    def test_recurrency(self):
+        testinnovationHistory = list();
+        testANN = NeuralNetwork(3,3)
+        for i in range(1000):
+            testANN.mutate(testinnovationHistory);
+        testANN.generateNetwork();
+        testANN.printNetwork();
+
+        with self.subTest("assert no duplicates"):
+            for con_a in testANN.connections:
+                paira = (con_a.toNode.ID, con_a.fromNode.ID);
+                appearedoncealready = False;
+                for con_b in testANN.connections:
+                    pairb = (con_b.toNode.ID, con_b.fromNode.ID);
+                    if paira[0] == pairb[0] and paira[1] == pairb[1]:
+                        if not appearedoncealready:
+                            # this is probably itself
+                            appearedoncealready = True;
+                        else:
+                            self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],pairb[1], con_a.innovationNumber, con_b.innovationNumber));
+
+
+
+
+    @unittest.skip("not testing test_Train")
+    @unittest.expectedFailure
     def test_Train(self):
         testinnovationHistory = list();
         testANN = NeuralNetwork(3,3)
@@ -678,6 +755,8 @@ class TestNeuralNetwork(unittest.TestCase):
         self.assertTrue(errorrate1 > errorrate2);
         pass;
 
+    @unittest.skip("not testing test_createGDimage")
+    @unittest.expectedFailure
     def test_createGDimage(self):
         testinnovationHistory = list();
         testANN = NeuralNetwork(3,3)
@@ -689,6 +768,8 @@ class TestNeuralNetwork(unittest.TestCase):
         #print(DI)
         # Cannot assert
 
+    @unittest.skip("not testing test_applyGDimage")
+    @unittest.expectedFailure
     def test_applyGDimage(self):
         testinnovationHistory = list();
         testANN = NeuralNetwork(3,3)

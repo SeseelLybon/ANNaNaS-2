@@ -27,7 +27,7 @@ def cartpoleMain(population:Population):
         observation = env.reset();
         while True:
 
-            meep.think(vision=[observation[0]]+[observation[2]]);
+            meep.think(vision=[observation[0]]+[observation[2]], postClean=False);
             decision = meep.decision;
             decisionIndex = decision.index(max(decision));
             observation, reward, done, info = env.step(action=decisionIndex); #push right

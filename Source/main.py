@@ -4,21 +4,20 @@
 import time
 
 import pyglet
-#import glooey
-import maintools
-from meeple import Meeple
 
 windowMain = pyglet.window.Window(1200, 800)
 windowMPL = pyglet.window.Window(1200,800)
 
-log = maintools.colLogger(name="main")
 
+import maintools
+log = maintools.colLogger(name="main")
 from population import Population
 from annstatistics import Statistics
 from meeple import Meeple
 
 from enum import Enum;
 from enum import auto;
+from typing import List;
 
 class availgames(Enum):
     xor = auto();
@@ -32,7 +31,10 @@ class availgames(Enum):
 
 
 popcap = 1000
-game:availgames = availgames.tictactoe;
+game:availgames = availgames.acrobat;
+
+inputlabels:List[str] = [];
+outputlabels:List[str] = [];
 
 if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
@@ -82,7 +84,6 @@ statswindow = Statistics()
 
 #population = Population(popcap, 2, 1) #xor compatible population
 
-
 genlabel = pyglet.text.Label('23423423',
                              font_name='Times New Roman',
                              font_size=20,
@@ -103,30 +104,6 @@ def update(dt):
 
 
     playgame(population);
-
-    elif game == availgames.xor:
-        xorMain(population)
-        pass;
-    elif game == availgames.hottercolder:
-        hottercolderMain(population);
-        pass;
-    elif game == availgames.blackjack:
-        blackjackMain(population);
-        pass;
-    elif game == availgames.cartpole:
-        cartpoleReplayBest(population.bestMeeple);
-        cartpoleMain(population);
-        pass;
-    elif game == availgames.acrobat:
-        acrobatReplayBest(population.bestMeeple);
-        acrobatMain(population)
-        pass;
-    #elif game == "mastermind":
-    #    mastermindMain(population)
-    #elif game == "dinorunner":
-    #    dinorunnerMain(population)
-    #elif game == "binarytodecimal":
-    #    binarytodecimalMain(population)
 
     # bestMeep.brain.printNetwork()
 
@@ -160,6 +137,7 @@ def update(dt):
                        population.speciesScoreHistogram);
     log.logger.info("Stats took :%.2fs" % (time.time()-lasttime[2]));
 
+
     log.logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
     if replaygame:
@@ -167,10 +145,15 @@ def update(dt):
 
 
 
+
 @windowMain.event
 def on_draw():
     windowMain.clear()
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+
+    # draw input labels
+    # int(startY + ((nodei*height)/(len(allNodes[layeri])+1)))
+
     #population.bestMeeple.brain.drawNetwork(50, 50, 1100, 750)
     population.meeples[0].brain.drawNetwork(50, 50, 1100, 750)
     #population.pop[len(population.species) + 1].brain.drawNetwork(650, 50, 650, 750)

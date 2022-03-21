@@ -111,6 +111,11 @@ class Connection:
         self.fromNode:Node = fromNode
         self.toNode:Node = toNode
 
+        if fromNode.layer < toNode.layer:
+            self.isRecurrent = False
+        else:
+            self.isRecurrent = True
+
         self.weight:float = weight
         self.innovationNumber:int = innovationNo
 
