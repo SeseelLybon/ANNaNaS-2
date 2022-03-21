@@ -15,6 +15,7 @@ log = maintools.colLogger(name="main")
 
 from population import Population
 from annstatistics import Statistics
+from meeple import Meeple
 
 from enum import Enum;
 from enum import auto;
@@ -37,7 +38,8 @@ if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
     #population = Population(popcap, 11, 9) # tictactoe compatible population
     population = Population(popcap, 2+9+9, 9) # tictactoe compatible population
-    #playgame = tictactoeMain;
+    playgame = tictactoeMain;
+    replaygame = None;
 elif game == availgames.xor:
     from games.xor.main import xorMain
     population = Population(popcap, 2, 1) # tictactoe compatible population
@@ -53,11 +55,15 @@ elif game == availgames.cartpole:
     population = Population(popcap, 2, 2) # tictactoe compatible population
     from games.cartpole.main import cartpoleMain
     from games.cartpole.main import cartpoleReplayBest
+    playgame = cartpoleMain;
+    replaygame = cartpoleReplayBest;
     pass;
 elif game == availgames.acrobat:
     population = Population(popcap, 6, 3) # tictactoe compatible population
     from games.acrobat.main import acrobatMain
     from games.acrobat.main import acrobatReplayBest
+    playgame = acrobatMain;
+    replaygame = acrobatReplayBest;
     pass;
 #elif game == "mastermind":
 #    from games.mastermind.main import mastermindMain
@@ -85,7 +91,7 @@ genlabel = pyglet.text.Label('23423423',
                              color=(0,0,0, 255))
 
 def update(dt):
-    global population, env
+    global population, playgame, replaygame
 
     log.logger.info("---------------------------------------")
     log.logger.info("New generation: %d" % population.generation)
@@ -95,9 +101,9 @@ def update(dt):
 
     maintools.loadingbar.printLoadingbar()
 
-    if game == availgames.tictactoe:
-        tictactoeMain(population)
-        pass;
+
+    playgame(population);
+
     elif game == availgames.xor:
         xorMain(population)
         pass;
@@ -156,6 +162,8 @@ def update(dt):
 
     log.logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
+    if replaygame:
+        replaygame(population.bestMeeple);
 
 
 
