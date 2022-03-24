@@ -68,7 +68,7 @@ class Meeple:
         return clone
 
     def calculateFitness(self)->None:
-        self.fitness = self.score
+        self.fitness = self.score*3;
 
     def crossover(self, parent2:Meeple)->Meeple:
         child:Meeple = Meeple(self.brainInputs, self.brainOutputs, True)

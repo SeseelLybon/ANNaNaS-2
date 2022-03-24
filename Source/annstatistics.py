@@ -31,16 +31,21 @@ class Statistics:
         self.image:pyglet.image.ImageData = None
 
 
-    def update(self, curgen:int, genscoresmax:List[float], genscorescur:List[float], scorehistohist:List[List[float]], scorehistospecies:List[List[float]]):
+    def update(self, curgen:int, genscoresmax:List[float], genscorescur:List[float], scorehistohist:List[List[float]], genomesizes:List[List[int]]):
         self.figure.clear();
         lenaxis = len(self.axis);
         self.axis.clear();
 
-        # Normalize scorehistospecies per row
-        for i in range(len(scorehistospecies)):
-            rowmax = max(scorehistospecies[i]+[1]);
-            scorehistospecies[i] = [ i/rowmax for i in scorehistospecies[i]];
-            continue;
+        ## Normalize scorehistospecies per row
+        #for i in range(len(scorehistospecies)):
+        #    rowmax = max(scorehistospecies[i] + [1]);
+        #    scorehistospecies[i] = [i / rowmax for i in scorehistospecies[i]];
+        #    continue;
+
+        # Move barsizes because matplotlib is stupid
+        for i in range(len(genomesizes[0])):
+            genomesizes[2][i] += genomesizes[1][i]
+            genomesizes[3][i] += genomesizes[2][i]
 
         # Average for genscorescur
         avg_i:int = 20 #average interval
@@ -105,11 +110,23 @@ class Statistics:
         self.axis[2].yaxis.set_ticks(list(range(0, 101, 20)))
         self.axis[2].set_yticklabels(list(range(curgen, curgen-101, -20)))
 
-        # Histogram current per species score distribution
-        self.axis[3].pcolormesh(scorehistospecies, cmap='hot')#, norm=mpl.colors.Normalize(vmin=0, vmax=1000))
-        self.axis[3].set_title("Histogram score/species");
-        self.axis[3].set_xlabel("Score Bin");
+        ## Histogram current per species score distribution
+        #self.axis[3].pcolormesh(scorehistospecies, cmap='hot')#, norm=mpl.colors.Normalize(vmin=0, vmax=1000))
+        #self.axis[3].set_title("Histogram score/species");
+        #self.axis[3].set_xlabel("Score Bin");
+        #self.axis[3].set_ylabel("Species");
+        #self.axis[3].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+        #self.axis[3].yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+
+        # Horizontal bar graph of current per species genome sizes
+        self.axis[3].barh(y=range(len(genomesizes[0])), width=genomesizes[3], color="yellow"); # Recurrent
+        self.axis[3].barh(y=range(len(genomesizes[0])), width=genomesizes[2], color="red"); # Connections
+        self.axis[3].barh(y=range(len(genomesizes[0])), width=genomesizes[1], color="blue");# Nodes
+        self.axis[3].set_title("Genome sizes");
+        self.axis[3].set_xlabel("Nodes:Connections:Recurrent");
         self.axis[3].set_ylabel("Species");
+        self.axis[3].yaxis.set_ticks(list(range(0, len(genomesizes[0]), 1)))
+        self.axis[3].set_yticklabels(labels=genomesizes[0])
         self.axis[3].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
         self.axis[3].yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 

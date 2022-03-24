@@ -18,51 +18,37 @@ def xorMain(population:Population):
 
     #maintools.loadingbar.loadingBarIncrement()
 
-    expected = [[0],[1],[1],[0]]    # XOR
-    #expected = [[1],[0],[0],[1]]   # XNOR
-    #expected = [[0],[1],[1],[1]]   # OR
-    #expected = [[0],[0],[0],[1]]   # AND
+
+    test = [[0,0],[1,0],[0,1],[1,1]];
+
+    #answer = [[0],[1],[1],[0]]    # XOR
+    #answer = [[1],[0],[0],[1]]   # XNOR
+    #answer = [[0],[1],[1],[1]]   # OR
+    #answer = [[1],[0],[0],[0]]   # NOR
+    answer = [[1],[1],[1],[0]]   # AND
 
     for player in population.meeples:
+        total = 0;
+        #index = np.array([0 for _ in range(len(test))]);
+        #rng.shuffle(index);
 
-        player.think(vision=[0,0])
-        decision = player.decision
-        total= getScore(decision, expected[0])
+        #for i in index:
+        for t, a in zip(test, answer):
+            player.think(vision=t)
+            decision = player.decision
+            total += getScore(decision, a)
 
-        player.think(vision=[1,0])
-        decision = player.decision
-        total+= getScore(decision, expected[1])
-
-        player.think(vision=[0,1])
-        decision = player.decision
-        total+= getScore(decision, expected[2])
-
-        player.think(vision=[1,1])
-        decision = player.decision
-        total+= getScore(decision, expected[3])
-
-        player.brain.train([[0,0],[1,0],[0,1],[1,1]],expected,0.00001);
+        #player.brain.train([[0,0],[1,0],[0,1],[1,1]],expected,0.00001);
 
         player.score = total
         continue
 
     bestMeep = population.bestMeeple
     print()
-    bestMeep.think(vision=[0,0])
-    decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %f" % (expected[0], decision[0], getScore(decision, expected[0])))
-
-    bestMeep.think(vision=[1,0])
-    decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %s" % (expected[1], decision[0], getScore(decision, expected[1])))
-
-    bestMeep.think(vision=[0,1])
-    decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %s" % (expected[2], decision[0], getScore(decision, expected[2])))
-
-    bestMeep.think(vision=[1,1])
-    decision = bestMeep.decision
-    print( "Expected %s, Got %.4f, Score %s" % (expected[3], decision[0], getScore(decision, expected[3])))
+    for t, a in zip(test, answer):
+        bestMeep.think(vision=t)
+        decision = bestMeep.decision
+        print( "Expected %s, Got %.4f, Score %f" % (a, decision[0], getScore(decision, a)))
 
 
 
@@ -102,9 +88,9 @@ if __name__ == "__main__":
     #p.print_stats()
     stats = []
 
-    for i in range(10):
-        log.logger.warning("Testing round %d"%i)
-        pop_i = i
+    for _i in range(10):
+        log.logger.warning("Testing round %d"%_i)
+        pop_i = _i
         population = Population(100, 2, 1)
         #pyglet.clock.schedule_interval_soft(update, 1)
         pyglet.app.run()

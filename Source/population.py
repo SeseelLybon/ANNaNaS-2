@@ -37,7 +37,8 @@ class Population:
         self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
         self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
         self.scorehistogHistor:List[List[float]] = [[0 for i in range(20)] for i in range(100)];
-        self.speciesScoreHistogram:List[List[float]] = list()
+        self.genomeSizes:List[List[int]] = [[],[],[],[]] ; # [[id],[nodes],[connections],[recurrent connections]]
+        #self.speciesScoreHistogram:List[List[float]] = list()
 
         for i in range(self.size):
             self.meeples.append(Meeple(input_size, output_size))
@@ -96,15 +97,16 @@ class Population:
         for meep in self.meeples:
             if meep.score <=1:
                 meep.score = 1;
-        
-        self.updateStats()
-        self.print_deathrate()
+
 
         log.logger.info("Starting Natural Selection")
 
         log.logger.info("Speciating")
         species_pre_speciate = len(self.species)
         self.speciate()  # seperate the existing population into species for the purpose of natural selection
+
+        self.updateStats()
+        self.print_deathrate()
 
         id_s = []
         for spec in self.species:
@@ -294,24 +296,59 @@ class Population:
         self.scorehistogHistor.append(scorebin_cur)
         self.scorehistogHistor[:] = self.scorehistogHistor[-100:]
 
+        for i in range(len(self.genomeSizes)):
+            self.genomeSizes[i].clear();
 
-        bins = 20
-        self.speciesScoreHistogram.clear()
-        if len(self.species) > 0:
-            for specie in self.species:
-                speciesscorebin = [0 for i in range(bins)]
-                maxscore = max([meep.score for meep in specie.meeples])
-                step = maxscore/bins
+        bestbrain = self.bestMeeple.brain;
+        self.genomeSizes[0].append(-1);
+        self.genomeSizes[1].append(len(self.bestMeeple.brain.nodes)-
+                                   self.bestMeeple.brain.input_size-
+                                   self.bestMeeple.brain.output_size-1);
+        totalf:int = 0; #feedforard connections
+        totalr:int = 0; #recurrent connections
+        for con in bestbrain.connections:
+            if con.isRecurrent:
+                totalr+=1;
+            else:
+                totalf+=1;
+        self.genomeSizes[2].append(totalf);
+        self.genomeSizes[3].append(totalr);
 
-                for meep in specie.meeples:
-                    for i in range(0,bins):
-                        if step*i <= meep.score <= step*(i+1):
-                            speciesscorebin[i]+=1;
-                            break;
-                    continue;
-                self.speciesScoreHistogram.append(speciesscorebin)
-        else:
-            self.speciesScoreHistogram.append([0 for i in range(bins)])
+        for specie in self.species:
+            self.genomeSizes[0].append(specie.speciesID);
+            bestbrain = specie.bestMeeple.brain;
+            self.genomeSizes[1].append(len(bestbrain.nodes)-bestbrain.input_size-bestbrain.output_size-1);
+
+            totalf:int = 0; #feedforard connections
+            totalr:int = 0; #recurrent connections
+            for con in bestbrain.connections:
+                if con.isRecurrent:
+                    totalr+=1;
+                else:
+                    totalf+=1;
+
+            self.genomeSizes[2].append(totalf);
+            self.genomeSizes[3].append(totalr);
+            pass;
+
+
+        #bins = 20
+        #self.speciesScoreHistogram.clear()
+        #if len(self.species) > 0:
+        #    for specie in self.species:
+        #        speciesscorebin = [0 for i in range(bins)]
+        #        maxscore = max([meep.score for meep in specie.meeples])
+        #        step = maxscore/bins
+#
+        #        for meep in specie.meeples:
+        #            for i in range(0,bins):
+        #                if step*i <= meep.score <= step*(i+1):
+        #                    speciesscorebin[i]+=1;
+        #                    break;
+        #            continue;
+        #        self.speciesScoreHistogram.append(speciesscorebin)
+        #else:
+        #    self.speciesScoreHistogram.append([0 for i in range(bins)])
 
         log.logger.info("scorebin bin:amount %s" % self.scorehistogHistor[-1]);
 
@@ -334,6 +371,12 @@ class Population:
 
         import jsonpickle
         import jsonpickle.ext.numpy as jsonpickle_numpy
+
+        # trim down some lists that can be rebuild
+        for meep in self.meeples:
+            meep.brain.network.clear();
+            for node in meep.brain.nodes:
+                node.inputConnections.clear();
 
         jsonpickle_numpy.register_handlers()
         jsonpickle.set_encoder_options('json', indent=4)
@@ -365,7 +408,10 @@ class Population:
 
         tempjoined = ''.join(templines);
 
-        thawed = jsonpickle.decode(tempjoined);
+        thawed:Population = jsonpickle.decode(tempjoined);
+
+        for meep in thawed.meeples:
+            meep.brain.generateNetwork();
 
         return thawed
 

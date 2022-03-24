@@ -18,39 +18,58 @@ env:gym.Env = gym.make("CartPole-v1");
 env.reset();
 
 
-def cartpoleMain(population:Population):
+def cartpoleMainnorm(population:Population):
     for meepi in range(population.size):
         loadingbar.loadingBarIncrement();
         meep:Meeple = population.meeples[meepi];
-
-
         observation = env.reset();
         while True:
-
-            meep.think(vision=[observation[0]]+[observation[2]], postClean=False);
+            meep.think(vision=observation, postClean=False);
             decision = meep.decision;
             decisionIndex = decision.index(max(decision));
             observation, reward, done, info = env.step(action=decisionIndex); #push right
-
-            meep.score += reward;
-
             if done:
                 break;
+        meep.score += reward;
 
-def cartpoleReplayBest(meep:Meeple):
+def cartpoleReplayBestnorm(meep:Meeple):
     observation:gym.Space = env.reset();
     while True:
-
         meep.think(vision=observation);
         decision = meep.decision;
         decisionIndex = decision.index(max(decision));
         observation, reward, done, info = env.step(action=decisionIndex); #push right
-
         meep.score += reward;
         env.render();
         if done:
             break;
 
+def cartpoleMainhard(population:Population):
+    for meepi in range(population.size):
+        loadingbar.loadingBarIncrement();
+        meep:Meeple = population.meeples[meepi];
+        observation = env.reset();
+        while True:
+            meep.think(vision=[observation[0]]+[observation[2]], postClean=False);
+            #meep.think(vision=[observation[0]]+[observation[2]], postClean=True);
+            decision = meep.decision;
+            decisionIndex = decision.index(max(decision));
+            observation, reward, done, info = env.step(action=decisionIndex); #push right
+            if done:
+                break;
+
+        meep.score += reward;
+def cartpoleReplayBesthard(meep:Meeple):
+    observation:gym.Space = env.reset();
+    while True:
+        meep.think(vision=observation);
+        decision = meep.decision;
+        decisionIndex = decision.index(max(decision));
+        observation, reward, done, info = env.step(action=decisionIndex); #push right
+        meep.score += reward;
+        env.render();
+        if done:
+            break;
 
 if __name__ == "__main__":
     from neuralnetwork import NeuralNetwork;
@@ -59,4 +78,4 @@ if __name__ == "__main__":
     meep = Meeple(brain.input_size, brain.output_size, isHollow=True);
     meep.brain = brain;
 
-    cartpoleReplayBest(meep);
+    cartpoleReplayBestnorm(meep);

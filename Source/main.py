@@ -26,11 +26,11 @@ class availgames(Enum):
     dinorunner = auto();
     hottercolder = auto();
     mastermind = auto();
-    cartpole = auto();
+    cartpolenorm = auto();
+    cartpolehard = auto();
     acrobat = auto();
 
 
-popcap = 1000
 game:availgames = availgames.acrobat;
 
 inputlabels:List[str] = [];
@@ -38,34 +38,59 @@ outputlabels:List[str] = [];
 
 if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
+    popcap = 1000
     #population = Population(popcap, 11, 9) # tictactoe compatible population
     population = Population(popcap, 2+9+9, 9) # tictactoe compatible population
     playgame = tictactoeMain;
     replaygame = None;
+    loadingbar = maintools.loadingBar(popcap, 50);
 elif game == availgames.xor:
     from games.xor.main import xorMain
+    popcap = 5000
     population = Population(popcap, 2, 1) # tictactoe compatible population
-elif game == availgames.hottercolder:
-    population = Population(popcap, 2, 1) # tictactoe compatible population
-    from games.hottercolder.main import hottercolderMain
-    pass;
+    playgame = xorMain;
+    replaygame = None;
+    inputlabels = ["A", "B"];
+    outputlabels = ["C"];
+    loadingbar = maintools.loadingBar(popcap, 50);
 elif game == availgames.blackjack:
+    popcap = 1000
     population = Population(popcap, 3, 1) # tictactoe compatible population
     from games.blackjack.main import blackjackMain
+    loadingbar = maintools.loadingBar(popcap, 50);
     pass;
-elif game == availgames.cartpole:
+elif game == availgames.cartpolenorm:
+    popcap = 3000
+    population = Population(popcap, 4, 2) # tictactoe compatible population
+    from games.cartpole.main import cartpoleMainnorm
+    from games.cartpole.main import cartpoleReplayBestnorm
+    playgame = cartpoleMainnorm;
+    replaygame = cartpoleReplayBestnorm;
+    inputlabels = ["Cart Pos.", "Cart Vel.", "Pole Ang.", "Pole Ang. Vel."];
+    outputlabels = ["nudge -1", "nudge 0", "nudge 1"];
+    loadingbar = maintools.loadingBar(popcap, 50);
+    pass;
+elif game == availgames.cartpolehard:
+    popcap = 3000
     population = Population(popcap, 2, 2) # tictactoe compatible population
-    from games.cartpole.main import cartpoleMain
-    from games.cartpole.main import cartpoleReplayBest
-    playgame = cartpoleMain;
-    replaygame = cartpoleReplayBest;
+    from games.cartpole.main import cartpoleMainhard
+    from games.cartpole.main import cartpoleReplayBesthard
+    playgame = cartpoleMainhard;
+    replaygame = cartpoleReplayBesthard;
+    inputlabels = ["Cart Pos.", "Pole Ang."];
+    outputlabels = ["nudge -1", "nudge 0", "nudge 1"];
+    loadingbar = maintools.loadingBar(popcap, 50);
     pass;
 elif game == availgames.acrobat:
+    popcap = 1000
     population = Population(popcap, 6, 3) # tictactoe compatible population
     from games.acrobat.main import acrobatMain
     from games.acrobat.main import acrobatReplayBest
     playgame = acrobatMain;
     replaygame = acrobatReplayBest;
+    inputlabels = ["Cos(theta1)", "Sin(theta1)", "Cos(theta2)", "Sin(theta2)", "Ang. Vel. theta1", "Ang. Vel. theta2"];
+    outputlabels = ["nudge -1", "nudge 0", "nudge 1"];
+    maintools.loadingbar = maintools.loadingBar(popcap, 50);
     pass;
 #elif game == "mastermind":
 #    from games.mastermind.main import mastermindMain
@@ -134,7 +159,7 @@ def update(dt):
                        population.genscoresHistor_max,
                        population.genscoresHistor_cur,
                        population.scorehistogHistor,
-                       population.speciesScoreHistogram);
+                       population.genomeSizes);
     log.logger.info("Stats took :%.2fs" % (time.time()-lasttime[2]));
 
 
@@ -148,14 +173,12 @@ def update(dt):
 
 @windowMain.event
 def on_draw():
+    global inputlabels, outputlabels
     windowMain.clear()
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
 
-    # draw input labels
-    # int(startY + ((nodei*height)/(len(allNodes[layeri])+1)))
-
     #population.bestMeeple.brain.drawNetwork(50, 50, 1100, 750)
-    population.meeples[0].brain.drawNetwork(50, 50, 1100, 750)
+    population.meeples[0].brain.drawNetwork(50, 50, 1100, 750, inputlabels, outputlabels)
     #population.pop[len(population.species) + 1].brain.drawNetwork(650, 50, 650, 750)
     genlabel.text = "Generation: "+ str(population.generation)
     genlabel.draw()
@@ -165,7 +188,7 @@ def on_draw():
     windowMPL.clear();
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
     if statswindow.image is not None:
-        statswindow.image.blit(-50,-50);
+        statswindow.image.blit(-100,-50);
 
 def final_draw():
     log.logger.warning("Printing screens");

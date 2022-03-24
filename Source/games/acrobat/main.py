@@ -25,7 +25,7 @@ def acrobatMain(population:Population):
 
 
         observation:gym.Space = env.reset();
-        meep.score = 500;
+        meep.score = 100; # reward is capped at -100
         while True:
 
             meep.think(vision=observation, postClean=False);

@@ -87,6 +87,7 @@ class NeuralNetwork:
 
         for nodei in range(len(self.network)):
             self.network[nodei].fire(self.layers_amount)
+            self.network[nodei].inputSum=0;
 
         outputValues:List[float] = list()
         for outi in range(self.input_size, self.input_size+self.output_size):
@@ -95,7 +96,11 @@ class NeuralNetwork:
         if postClean:
             self.resetinputs();
 
-        return outputValues
+        return outputValues;
+
+    def resetinputs(self):
+        for nodei in range(len(self.nodes)):
+            self.nodes[nodei].inputSum = 0
 
     def getDecision(self)->List[float]:
         return [self.nodes[i].outputValue for i in range(self.input_size, self.input_size+self.output_size)];
@@ -109,9 +114,6 @@ class NeuralNetwork:
             self.connections[conni].fromNode.outputConnections.append(self.connections[conni])
             self.connections[conni].toNode.inputConnections.append(self.connections[conni]);
 
-    def resetinputs(self):
-        for nodei in range(len(self.nodes)):
-            self.nodes[nodei].inputSum = 0
 
     def generateNetwork(self) -> None:
         self.connectNodes()
@@ -211,9 +213,8 @@ class NeuralNetwork:
 
     def addConnection(self, innovationHistory:List[ConnectionHistory]) -> None:
 
-        recurrentRNG = rng.uniform()
         isRecurrent = False
-        if recurrentRNG < 0.10:
+        if rng.uniform() < 0.10:
             log.logger.debug("Adding new Recurrent Connection")
             isRecurrent = True
         else:
@@ -418,7 +419,7 @@ class NeuralNetwork:
 
 
 
-    def drawNetwork(self, startX:int, startY:int, width:int, height:int)->None:
+    def drawNetwork(self, startX:int, startY:int, width:int, height:int, inputlabels:List[str], outputlabels:List[str])->None:
         # batchConnections = pyglet.graphics.Batch()
         # batchNodesOutlines = pyglet.graphics.Batch()
         # batchNodes = pyglet.graphics.Batch()
@@ -519,6 +520,22 @@ class NeuralNetwork:
             nodeShapeOutline.draw()
             nodeShape.draw()
             label.draw()
+
+        # draw all the labels:
+        label.anchor_x="left";
+        for labi,nodei in zip(range(len(inputlabels)),range(0, self.input_size)):
+            label.text = inputlabels[labi];
+            label.x = nodePoses[nodei].x+30;
+            label.y = nodePoses[nodei].y;
+            label.draw();
+
+
+        for labi, nodei in zip(range(len(outputlabels)),range(len(self.nodes)-self.output_size, len(self.nodes))):
+            label.text = outputlabels[labi];
+            label.x = nodePoses[nodei].x+30;
+            label.y = nodePoses[nodei].y;
+            label.draw();
+
 
     def JSONStoreNeuralNetwork(self, filepath="NeuralNetwork.json"):
         import jsonpickle
@@ -690,33 +707,88 @@ class TestNeuralNetwork(unittest.TestCase):
     #   pass;
 
     def test_basebehaviour(self):
-        testinnovationHistory = list();
-        testANN = NeuralNetwork(3,3)
-        for i in range(100):
-            testANN.mutate(testinnovationHistory);
-        testANN.generateNetwork();
-        #testANN.printNetwork();
+        with self.subTest("basic creation"):
+            testinnovationHistory = list();
+            testANN = NeuralNetwork(3,3)
+            for i in range(1000):
+                testANN.mutate(testinnovationHistory);
+            testANN.generateNetwork();
+            #testANN.printNetwork();
+            testANN.generateNetwork();
 
+        with self.subTest("Feed forward w/o recurrency"):
+            traindata = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
+            trainanswers = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
+
+            errorrate1 = 0;
+            for dat, ans in zip(traindata, trainanswers):
+                testANN.feedForward(dat);
+                deci = testANN.getDecision();
+                log.logger.info(deci);
+                for i in range(len(deci)):
+                    errorrate1 += (deci[i]-ans[i])**2
+            log.logger.info(errorrate1);
+
+            # expecting the end values to be none 0's.
+            self.assertTrue(testANN.getDecision() != [0,0,0])
+            errorrate2 = 0;
+            for dat, ans in zip(traindata, trainanswers):
+                testANN.feedForward(dat);
+                deci = testANN.getDecision();
+                log.logger.info(deci);
+                for i in range(len(deci)):
+                    errorrate2 += (deci[i]-ans[i])**2
+            log.logger.info(errorrate2);
+
+            #Expecting the two values to be equal since no change should be happening between runs
+            self.assertTrue(errorrate1 == errorrate2);
+
+        with self.subTest("Feed forward w/ recurrency"):
+            errorrate1 = 0;
+            for dat, ans in zip(traindata, trainanswers):
+                testANN.feedForward(dat, postClean=False);
+                deci = testANN.getDecision();
+                log.logger.info(deci);
+                for i in range(len(deci)):
+                    errorrate1 += (deci[i]-ans[i])**2
+            log.logger.info(errorrate1);
+
+            errorrate2 = 0;
+            for dat, ans in zip(traindata, trainanswers):
+                testANN.feedForward(dat, postClean=False);
+                deci = testANN.getDecision();
+                log.logger.info(deci);
+                for i in range(len(deci)):
+                    errorrate2 += (deci[i]-ans[i])**2
+            log.logger.info(errorrate2);
+
+            # Expecting the two values to be unequal since the recurrency must influence the second feedforward.
+            self.assertFalse(errorrate1 == errorrate2);
+
+
+    #@unittest.expectedFailure
     def test_recurrency(self):
         testinnovationHistory = list();
         testANN = NeuralNetwork(3,3)
-        for i in range(1000):
+        for i in range(10000):
             testANN.mutate(testinnovationHistory);
         testANN.generateNetwork();
         testANN.printNetwork();
 
-        with self.subTest("assert no duplicates"):
+        with self.subTest("No duplicate connections"):
             for con_a in testANN.connections:
                 paira = (con_a.toNode.ID, con_a.fromNode.ID);
-                appearedoncealready = False;
+                #appearedoncealready = False;
                 for con_b in testANN.connections:
                     pairb = (con_b.toNode.ID, con_b.fromNode.ID);
                     if paira[0] == pairb[0] and paira[1] == pairb[1]:
-                        if not appearedoncealready:
+                        #if not appearedoncealready:
+                        if con_a.innovationNumber == con_b.innovationNumber:
                             # this is probably itself
                             appearedoncealready = True;
                         else:
-                            self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],pairb[1], con_a.innovationNumber, con_b.innovationNumber));
+                            with self.subTest("No duplicate connections"):
+                                self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],pairb[1], con_a.innovationNumber, con_b.innovationNumber));
 
 
 
@@ -755,7 +827,7 @@ class TestNeuralNetwork(unittest.TestCase):
         self.assertTrue(errorrate1 > errorrate2);
         pass;
 
-    @unittest.skip("not testing test_createGDimage")
+    #@unittest.skip("not testing test_createGDimage")
     @unittest.expectedFailure
     def test_createGDimage(self):
         testinnovationHistory = list();
@@ -768,7 +840,7 @@ class TestNeuralNetwork(unittest.TestCase):
         #print(DI)
         # Cannot assert
 
-    @unittest.skip("not testing test_applyGDimage")
+    #@unittest.skip("not testing test_applyGDimage")
     @unittest.expectedFailure
     def test_applyGDimage(self):
         testinnovationHistory = list();

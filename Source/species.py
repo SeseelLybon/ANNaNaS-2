@@ -153,7 +153,7 @@ class Species:
     def fitnessSharing_alt(self)->None:
         # Seseel - takes 10% of all fitness in the species, and then returns it from the sum divided equally
         fitnessTaxSum = 0
-        fitnessTaxRate = 0.1
+        fitnessTaxRate = 0.2
         # Seseel - take 10% of meeps' fitness and add to sum
         for meep in self.meeples:
             fitnessTaxSum += meep.fitness * fitnessTaxRate
