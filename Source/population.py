@@ -378,6 +378,10 @@ class Population:
             for node in meep.brain.nodes:
                 node.inputConnections.clear();
 
+        # only store bestmeeps from the species'
+        temp = self.meeples[:]
+        self.meeples = [specie.bestMeeple for specie in self.species];
+
         jsonpickle_numpy.register_handlers()
         jsonpickle.set_encoder_options('json', indent=4)
         #filepath = str(self.UUID)+".txt";
@@ -387,6 +391,8 @@ class Population:
         with open(filepath, 'w') as file:
             frozen = jsonpickle.encode(self)
             file.write(frozen);
+
+        self.meeples[:] = temp[:];
 
     @staticmethod
     def population_load(filepath:str) -> Population:

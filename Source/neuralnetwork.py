@@ -428,6 +428,8 @@ class NeuralNetwork:
         # batch.add(x)
         # batch.draw()
 
+        # TODO: make it so nodes are aligned by the Y-center
+w
         allNodes:List[List[Node]] = []
         nodePoses:List[Vec2d] = []
         nodeNumbers:List[int] = []
