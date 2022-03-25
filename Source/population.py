@@ -176,7 +176,7 @@ class Population:
         self.generation += 1
 
         self.bestMeeple.brain.JSONStoreNeuralNetwork(filepath="BestMeepleBrain.json")
-        self.population_dump();
+        #self.population_dump();
 
         for meep in self.meeples:
             meep.brain.generateNetwork()
@@ -368,6 +368,7 @@ class Population:
 
     def population_dump(self)->None:
         # Note to self; not using serpent because of cirular dependancy. No idea how to solve it.
+        # TODO: Uses too much space when dumping
 
         import jsonpickle
         import jsonpickle.ext.numpy as jsonpickle_numpy

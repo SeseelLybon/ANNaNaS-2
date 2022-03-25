@@ -429,7 +429,7 @@ class NeuralNetwork:
         # batch.draw()
 
         # TODO: make it so nodes are aligned by the Y-center
-w
+
         allNodes:List[List[Node]] = []
         nodePoses:List[Vec2d] = []
         nodeNumbers:List[int] = []
@@ -453,7 +453,11 @@ w
                 #                          (height/2)/(len(allNodes[layeri])+1)))
                 #else:
                 #    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1))
-                y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1)))
+                if layeri == 0 or layeri==self.layers_amount-1:
+                    #y:int = int(startY + ( (nodei*height)/(len(allNodes[layeri])+1)) )
+                    y:int = int(startY + height*((nodei)/(len(allNodes[layeri])-1)) );
+                else:
+                    y:int = int(startY + height*((nodei+1)/(len(allNodes[layeri])+1)) );
 
                 nodePoses.append(Vec2d(x, y))
                 nodeNumbers.append(allNodes[layeri][nodei].ID)

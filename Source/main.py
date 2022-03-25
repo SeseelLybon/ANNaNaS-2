@@ -31,7 +31,7 @@ class availgames(Enum):
     acrobat = auto();
 
 
-game:availgames = availgames.acrobat;
+game:availgames = availgames.tictactoe;
 
 inputlabels:List[str] = [];
 outputlabels:List[str] = [];
@@ -103,7 +103,7 @@ elif game == availgames.acrobat:
 #    population = Population(popcap, 3, 8) # tictactoe compatible population
 else:
     log.logger.fatal("Game not found");
-    exit(-1);
+    exit(-11037);
 
 statswindow = Statistics()
 
@@ -119,8 +119,12 @@ genlabel = pyglet.text.Label('23423423',
 def update(dt):
     global population, playgame, replaygame
 
+    now = time.localtime();
+
     log.logger.info("---------------------------------------")
-    log.logger.info("New generation: %d" % population.generation)
+    log.logger.info("New generation: %d\t- %d-%d\t%d:%d:%d" %
+                    (population.generation,
+                     now.tm_mday, now.tm_mon, now.tm_hour, now.tm_min, now.tm_sec))
     # each update is a generation
     temptime = time.time()
     lasttime = [temptime for i in range(3)]
@@ -178,7 +182,7 @@ def on_draw():
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
 
     #population.bestMeeple.brain.drawNetwork(50, 50, 1100, 750)
-    population.meeples[0].brain.drawNetwork(50, 50, 1100, 750, inputlabels, outputlabels)
+    population.meeples[0].brain.drawNetwork(50, 50, 1100, 650, inputlabels, outputlabels)
     #population.pop[len(population.species) + 1].brain.drawNetwork(650, 50, 650, 750)
     genlabel.text = "Generation: "+ str(population.generation)
     genlabel.draw()
