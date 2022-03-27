@@ -241,15 +241,15 @@ class NeuralNetwork:
         for rngconi1, rngconi2 in rnglist:
             randomNode1 = rngconi1
             randomNode2 = rngconi2
-            if randomNode1 != self.nodes[self.biasNodeID] and \
-                    randomNode2 != self.nodes[self.biasNodeID]:
+            if randomNode1 != self.biasNodeID and \
+                    randomNode2 != self.biasNodeID:
                 if not self.checkIfConnected(randomNode1, randomNode2):
                     break;
 
         log.logger.debug("%s, %s : these connections were considered non-duplicate" % (randomNode1, randomNode2))
 
-        if randomNode1 == self.biasNodeID or randomNode2 == self.biasNodeID:
-            isRecurrent = False;
+        #if randomNode1 == self.biasNodeID or randomNode2 == self.biasNodeID:
+        #    isRecurrent = False;
 
         if not isRecurrent: # got to make sure connection goes forwards
             if self.nodes[randomNode1].layer > self.nodes[randomNode2].layer:
@@ -537,7 +537,11 @@ class NeuralNetwork:
         # Draw all nodes (and ID's)
 
         for nodei in range(len(nodePoses)):
-            shapesList.append(pyglet.text.Label(str(nodei),
+            if nodei == self.input_size : #self.biasNodeID - this is shifted
+                nodeL = "B";
+            else:
+                nodeL = str(nodei);
+            shapesList.append(pyglet.text.Label(str(nodeL),
                                                 font_name='Times New Roman', font_size=14,
                                                 x=nodePoses[nodei].x, y=nodePoses[nodei].y,
                                                 anchor_x='center', anchor_y='center',

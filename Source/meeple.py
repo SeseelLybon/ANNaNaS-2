@@ -28,14 +28,6 @@ class Meeple:
 
         self.trueskill = ts.Rating(15)
         self.elo = elo.Rating()
-        self.winx:int = 0
-        self.wino:int = 0
-        self.losex:int = 0
-        self.loseo:int = 0
-        self.drawx:int = 0
-        self.drawo:int = 0
-        self.foulx:int = 0
-        self.foulo:int = 0
 
 
     def show(self)->None:
@@ -68,7 +60,7 @@ class Meeple:
         return clone
 
     def calculateFitness(self)->None:
-        self.fitness = self.score*3;
+        self.fitness = self.score#*3;
 
     def crossover(self, parent2:Meeple)->Meeple:
         child:Meeple = Meeple(self.brainInputs, self.brainOutputs, True)

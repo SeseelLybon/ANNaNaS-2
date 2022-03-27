@@ -236,10 +236,13 @@ class Population:
 
         self.species[:] = [ specie for specie in self.species if len(specie.meeples) > 0 ]
 
+
+        self.fitnessSharing_Tax()
         for specie in self.species:
             #specie.fitnessSharing()
-            specie.fitnessSharing_alt()
-            #specie.fitnessSharing_book()
+            #specie.fitnessSharing_Alt1(self.size, averageSum)
+            #specie.fitnessSharing_Alt2()
+            #specie.fitnessSharing_Book()
             specie.setAverageFitness()
 
         averageSum = self.getAverageFitnessSum()
@@ -256,6 +259,21 @@ class Population:
             log.logger.warning("Killing %d bad species" % (prekill-len(self.species)))
 
 
+    def fitnessSharing_Tax(self)->None:
+        # Takes n% of all fitness in the species, and then returns it from the sum divided equally
+        fitnessTaxSum = 0
+        fitnessTaxRate = 0.1
+        # Take n% of meeps' fitness and add to sum
+        for meep in self.meeples:
+            fitnessTaxSum += meep.fitness * fitnessTaxRate
+            meep.fitness*=(1-fitnessTaxRate)
+
+        # Return sum/len(self.meeples) fitness
+        fitnessTaxReturn = fitnessTaxSum / len(self.meeples)
+        for meep in self.meeples:
+            meep.fitness += fitnessTaxReturn
+        return
+
     #get the sum of averages from each specie
     def getAverageFitnessSum(self)->float:
         tempsum = 0
@@ -270,8 +288,6 @@ class Population:
 
 
     def updateStats(self):
-
-
         self.genscoresHistor_cur.append(max(meep.score for meep in self.meeples[:]));
         self.genscoresHistor_cur[:] = self.genscoresHistor_cur[-100:]
 
@@ -335,26 +351,6 @@ class Population:
 
             self.genomeSizes[2].append(totalf);
             self.genomeSizes[3].append(totalr);
-            pass;
-
-
-        #bins = 20
-        #self.speciesScoreHistogram.clear()
-        #if len(self.species) > 0:
-        #    for specie in self.species:
-        #        speciesscorebin = [0 for i in range(bins)]
-        #        maxscore = max([meep.score for meep in specie.meeples])
-        #        step = maxscore/bins
-#
-        #        for meep in specie.meeples:
-        #            for i in range(0,bins):
-        #                if step*i <= meep.score <= step*(i+1):
-        #                    speciesscorebin[i]+=1;
-        #                    break;
-        #            continue;
-        #        self.speciesScoreHistogram.append(speciesscorebin)
-        #else:
-        #    self.speciesScoreHistogram.append([0 for i in range(bins)])
 
         log.logger.info("scorebin bin:amount %s" % self.scorehistogHistor[-1]);
 

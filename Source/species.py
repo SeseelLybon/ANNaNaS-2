@@ -150,23 +150,25 @@ class Species:
             meep.fitness/=len(self.meeples)
         return
 
-    def fitnessSharing_alt(self)->None:
-        # Seseel - takes 10% of all fitness in the species, and then returns it from the sum divided equally
-        fitnessTaxSum = 0
-        fitnessTaxRate = 0.1
-        # Seseel - take 10% of meeps' fitness and add to sum
+    def fitnessSharing_Alt1(self, popsize, popaverage)->None:
+        # Promotes species that produce good solutions on average
+        # Punishes species that may produce both very high and very low solutions
         for meep in self.meeples:
-            fitnessTaxSum += meep.fitness * fitnessTaxRate
-            meep.fitness*=(1-fitnessTaxRate)
-
-        # Seseel - return sum/len(self.meeples) fitness
-        fitnessTaxReturn = fitnessTaxSum / len(self.meeples)
-        for meep in self.meeples:
-            meep.fitness += fitnessTaxReturn
+            meep.fitness = (self.fitnessSum/popaverage)*popsize;
         return
 
-    def fitnessSharing_book(self)->None:
-        # Seseel fitness sharing as described in the book(?)
+    def fitnessSharing_Alt2(self, popsize)->None:
+        # Promotes species that may produce both very high and very low solutions
+        # Punishes species that produce good solutions on average
+
+        maxfitness = max([meep.fitness for meep in self.meeples]);
+
+        for meep in self.meeples:
+            meep.fitness/=len(self.meeples)
+        return
+
+    def fitnessSharing_Book(self)->None:
+        # fitness sharing as described in the book(?)
         for meepi in self.meeples:
             distanceSum=0
 

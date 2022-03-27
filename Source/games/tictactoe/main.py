@@ -139,11 +139,11 @@ def run_game(meep1:Meeple, meep2:Meeple, show=False)->tuple:
              0, 0, 0,
              0, 0, 0];
 
-    board[rng.integers(0,9)] = 1;
+    #board[rng.integers(0,9)] = 1;
     # Force the first player to make a random move
 
-    turn = "O"
-    for turnstep in range(7):
+    turn = "X"
+    for turnstep in range(8):
         if turn == "X":
             board_free = [ 1 if c == 0 else 0 for c in board ];
 
