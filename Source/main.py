@@ -43,7 +43,7 @@ if game == availgames.tictactoe:
     population = Population(popcap, 2+9+9, 9) # tictactoe compatible population
     playgame = tictactoeMain;
     replaygame = None;
-    loadingbar = maintools.loadingBar(popcap, 50);
+    maintools.loadingbar = maintools.loadingBar(popcap, 50);
 elif game == availgames.xor:
     from games.xor.main import xorMain
     popcap = 5000
@@ -52,12 +52,12 @@ elif game == availgames.xor:
     replaygame = None;
     inputlabels = ["A", "B"];
     outputlabels = ["C"];
-    loadingbar = maintools.loadingBar(popcap, 50);
+    maintools.loadingbar = maintools.loadingBar(popcap, 50);
 elif game == availgames.blackjack:
     popcap = 1000
     population = Population(popcap, 3, 1) # tictactoe compatible population
     from games.blackjack.main import blackjackMain
-    loadingbar = maintools.loadingBar(popcap, 50);
+    maintools.loadingbar = maintools.loadingBar(popcap, 50);
     pass;
 elif game == availgames.cartpolenorm:
     popcap = 3000
@@ -68,7 +68,7 @@ elif game == availgames.cartpolenorm:
     replaygame = cartpoleReplayBestnorm;
     inputlabels = ["Cart Pos.", "Cart Vel.", "Pole Ang.", "Pole Ang. Vel."];
     outputlabels = ["nudge -1", "nudge 0", "nudge 1"];
-    loadingbar = maintools.loadingBar(popcap, 50);
+    maintools.loadingbar = maintools.loadingBar(popcap, 50);
     pass;
 elif game == availgames.cartpolehard:
     popcap = 3000
@@ -79,7 +79,7 @@ elif game == availgames.cartpolehard:
     replaygame = cartpoleReplayBesthard;
     inputlabels = ["Cart Pos.", "Pole Ang."];
     outputlabels = ["nudge -1", "nudge 0", "nudge 1"];
-    loadingbar = maintools.loadingBar(popcap, 50);
+    maintools.loadingbar = maintools.loadingBar(popcap, 50);
     pass;
 elif game == availgames.acrobat:
     popcap = 1000

@@ -6,6 +6,7 @@ from typing import List
 import math
 import numpy as np
 from itertools import combinations
+import random
 
 from node import Connection
 from node import Node
@@ -328,18 +329,20 @@ class NeuralNetwork:
         else:
             stalenessMod:float = 1+staleness/500
 
-        if rng.uniform() < 0.01*stalenessMod:
+        if rng.uniform() < 0.01:#*stalenessMod:
             log.logger.debug("RNG: Add new node")
             self.addNode(innovationHistory)
 
-        elif rng.uniform() < 0.05*stalenessMod:
+        elif rng.uniform() < 0.05:#*stalenessMod:
             log.logger.debug("RNG: Add new connection")
             self.addConnection(innovationHistory)
 
-        elif rng.uniform() < 0.80*stalenessMod:
+        elif rng.uniform() < 0.80:#*stalenessMod:
             log.logger.debug("RNG: Mutate weights")
-            for conni in range(len(self.connections)):
-                self.connections[conni].mutateWeight()
+            random.choice(self.connections).mutateWeight();
+            #if len(self.connections)!=0:
+            #    for conni in random.choices(range(len(self.connections)), k=len(self.connections)//8):
+            #        self.connections[conni].mutateWeight()
 
     def crossover(self, parent2:NeuralNetwork) -> NeuralNetwork:
         global nextNeuralNetworkID

@@ -33,6 +33,7 @@ class Population:
         self.generation = 0
 
         self.maxStaleness = 100 # how often a species can not improve before it's considered stale/stuck
+        self.protectedSpecies = 2;
 
         self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
         self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
@@ -217,11 +218,13 @@ class Population:
 
 
     def killStaleSpecies(self):
-
         prekill = len(self.species)
 
         # protect 2 fittest species from staleness, then add rest of not stale species.
-        self.species[:] = self.species[0:2] + [ specie for specie in self.species[2:] if specie.staleness < self.maxStaleness]
+        temp = self.species[:self.protectedSpecies];
+        self.species[:] = [ specie for specie in self.species if specie.staleness < self.maxStaleness]
+        if len(self.species) <= self.protectedSpecies:
+            self.species[:] = temp[:];
         #self.species[:] = [ specie for specie in self.species if specie.staleness < self.maxStaleness]
 
         if prekill-len(self.species) > 0:
@@ -229,8 +232,6 @@ class Population:
 
 
     def killBadSpecies(self):
-
-
         prekill = len(self.species)
 
         self.species[:] = [ specie for specie in self.species if len(specie.meeples) > 0 ]
@@ -244,7 +245,12 @@ class Population:
         averageSum = self.getAverageFitnessSum()
 
         #self.species[:] = [ specie for specie in self.species if ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
-        self.species[:] = self.species[0:2] + [specie for specie in self.species[2:] if averageSum > 0 and ((specie.averageFitness/averageSum) * self.size >= 1)]
+        temp = self.species[:self.protectedSpecies];
+        self.species[:] = [specie for specie in self.species if averageSum > 0 and ((specie.averageFitness/averageSum) * self.size >= 1)]
+
+        if len(self.species) <= self.protectedSpecies:
+            self.species[:] = temp[:];
+
 
         if prekill-len(self.species) > 0:
             log.logger.warning("Killing %d bad species" % (prekill-len(self.species)))

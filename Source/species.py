@@ -24,7 +24,7 @@ class Species:
 
         self.exceesCoeff:float = 1
         self.weightDiffCoeff:float = 1
-        self.compatibilityThreshold:float = 4
+        self.compatibilityThreshold:float = 3
 
 
 
@@ -153,7 +153,7 @@ class Species:
     def fitnessSharing_alt(self)->None:
         # Seseel - takes 10% of all fitness in the species, and then returns it from the sum divided equally
         fitnessTaxSum = 0
-        fitnessTaxRate = 0.2
+        fitnessTaxRate = 0.1
         # Seseel - take 10% of meeps' fitness and add to sum
         for meep in self.meeples:
             fitnessTaxSum += meep.fitness * fitnessTaxRate

@@ -25,7 +25,7 @@ def tictactoeMain(population:Population):
 
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        for i in range(1000):
+        for i in range(100000):
             if cell_test(meepi, population):
                 continue;
             else:
@@ -90,10 +90,10 @@ def cell_test(meepi:int, population:Population) -> bool:
         if board[index] == 0:
             if turn=="X":
                 board[index] = 1
-                meep.score += 2**turnstep;
+                meep.score += turnstep;
             elif turn=="O":
                 board[index] = 1
-                meep.score += 2**turnstep;
+                meep.score += turnstep;
         else:
             return False;
     return True;
@@ -116,17 +116,17 @@ def pre_game(players:Tuple[Meeple,Meeple]):
         if endgamestate[2] == 1:
             meep1.elo.newRating(winchance1, 1)
             meep2.elo.newRating(winchance2, 0)
-            meep1.score += 10**6*winchance2
+            meep1.score += 10**5*winchance2
         elif endgamestate[2] == 2:
             meep1.elo.newRating(winchance1, 0)
             meep2.elo.newRating(winchance2, 1)
-            meep2.score += 10**7*winchance1
+            meep2.score += 10**6*winchance1
         return True
     elif endgamestate[0] == "Draw":
         meep1.elo.newRating(winchance1, 0.25)
         meep2.elo.newRating(winchance2, 0.75)
-        meep1.score += 10**4*winchance2
-        meep2.score += 10**5*winchance1
+        meep1.score += 10**3*winchance2
+        meep2.score += 10**4*winchance1
         return True
     return False
 
