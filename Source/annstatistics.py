@@ -48,21 +48,31 @@ class Statistics:
             genomesizes[3][i] += genomesizes[2][i]
 
         # Average for genscorescur
-        avg_i:int = 20 #average interval
+        avg_i:int = 10 #average interval
         l = len(genscorescur)
         genscorescur_avg = [];
+
+        #if l == 1:
+        #    genscorescur.append( genscorescur[0] );
+
+        # produce an average for every avg_i scores
         for scori in range(0,l+1,avg_i):
-            if l == 1:
-                genscorescur_avg.append( genscorescur[0] )
-                break;
-            elif scori == 0:
-                genscorescur_avg.append( genscorescur[0] )
+            if scori == 0:
+                pass;
+            #    genscorescur_avg.append( genscorescur[0] )
+            #elif scori%avg_i == 0:
             elif scori%avg_i == 0:
                 genscorescur_avg.append( sum(genscorescur[scori-avg_i:scori])/avg_i );
 
+        # if there's leftover, append an avg over said leftover.
         if l%avg_i != 0:
             genscorescur_avg.append( sum(genscorescur[l-l%avg_i:l+1])/
                                      (l%avg_i) );
+
+        # duplicate the average of 0, so tick 0 gets starts at the same height.
+        genscorescur_avg.insert(0, genscorescur_avg[0] );
+
+        avg_xList=list(range(0, l,avg_i))+[l];
 
 
 
@@ -86,27 +96,20 @@ class Statistics:
         self.axis[1].set_title("Best Score/gen");
         self.axis[1].set_xlabel("Generation");
         self.axis[1].set_ylabel("Score");
-        self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+        self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator())
 
         # Graph for the average current genscore
-        #log.logger.warning(genscorescur_avg);
         axis1_2 = self.axis[1].twiny()
-        if len(genscorescur) < 100:
-            axis1_2.step(list(range(0, l+1,avg_i))+list(range(l,l+l%avg_i,(l%avg_i)+1)),
-                         genscorescur_avg, color="tab:red")
-        else:
-            axis1_2.step(list(range(0, l+1,avg_i)),
-                         genscorescur_avg, color="tab:red")
-        axis1_2.tick_params(axis="x", labelbottom=False);
-        axis1_2.tick_params(axis="x", labeltop=False);
+        axis1_2.step(avg_xList,
+                     genscorescur_avg, color="tab:red")
+        axis1_2.xaxis.set_major_locator(mpl.ticker.NullLocator())
 
         # Histogram history of population score distribution
         self.axis[2].pcolormesh(scorehistohist[::-1], cmap='hot', norm=mpl.colors.Normalize(vmin=0, vmax=500))
         self.axis[2].set_title("Histogram pop/gen");
         self.axis[2].set_xlabel("Score Bin");
         self.axis[2].set_ylabel("Generation");
-        #self.axis[2].yaxis.set_major_locator(mpl.ticker.FixedLocator(list(range(curgen, curgen-101, -20))))
-        #self.axis[2].yaxis.set_major_locator(mpl.ticker.MaxNLocator(5))
+        self.axis[2].xaxis.set_minor_locator(mpl.ticker.MaxNLocator(len(scorehistohist[0])))
         self.axis[2].yaxis.set_ticks(list(range(0, 101, 20)))
         self.axis[2].set_yticklabels(list(range(curgen, curgen-101, -20)))
 
