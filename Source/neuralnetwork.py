@@ -227,7 +227,13 @@ class NeuralNetwork:
             return
         log.logger.debug("Adding new Connection")
 
+        # TODO: change combinations to permutations to allow nodes to recurrent to themselves
+        #   This will break a ton. Also add a visual indicator for the graph
+
         # grab 2 nodes that don't have a connection
+        #if isRecurrent:
+        #   rnglist = list( combinations(list(range(len(self.nodes))), 2))
+        #else:
         rnglist = list( combinations(list(range(len(self.nodes))), 2))
         rng.shuffle(rnglist)
         randomNode1:int = None
@@ -423,15 +429,19 @@ class NeuralNetwork:
 
 
     def drawNetwork(self, startX:int, startY:int, width:int, height:int, inputlabels:List[str], outputlabels:List[str])->None:
-        # batchConnections = pyglet.graphics.Batch()
-        # batchNodesOutlines = pyglet.graphics.Batch()
-        # batchNodes = pyglet.graphics.Batch()
-        # batchLabels = pyglet.graphics.Batch()
+        batch = pyglet.graphics.Batch();
+        groupConnections = pyglet.graphics.OrderedGroup(0);
+        groupNodesOutlines = pyglet.graphics.OrderedGroup(1);
+        groupNodes = pyglet.graphics.OrderedGroup(2);
+        groupLabels = pyglet.graphics.OrderedGroup(3);
+
+        shapesList = [];
+        #batchNodesOutlines = pyglet.graphics.Batch()
+        #batchNodes = pyglet.graphics.Batch()
+        #batchLabels = pyglet.graphics.Batch()
 
         # batch.add(x)
         # batch.draw()
-
-        # TODO: make it so nodes are aligned by the Y-center
 
         allNodes:List[List[Node]] = []
         nodePoses:List[Vec2d] = []
@@ -458,12 +468,13 @@ class NeuralNetwork:
                 #    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1))
                 if layeri == 0 or layeri==self.layers_amount-1:
                     #y:int = int(startY + ( (nodei*height)/(len(allNodes[layeri])+1)) )
-                    y:int = int(startY + height*((nodei)/(len(allNodes[layeri])-1)) );
+                    y:int = int(startY + height*(nodei/(len(allNodes[layeri])-1)) );
                 else:
                     y:int = int(startY + height*((nodei+1)/(len(allNodes[layeri])+1)) );
 
                 nodePoses.append(Vec2d(x, y))
                 nodeNumbers.append(allNodes[layeri][nodei].ID)
+
 
         # draw all the connections
         for conni in range(len(self.connections)):
@@ -471,80 +482,100 @@ class NeuralNetwork:
                 pygl.glLineWidth(abs(int(self.connections[conni].weight*2))+1)
             else:
                 continue
-            if not self.connections[conni].isRecurrent:
-                if self.connections[conni].weight >=0:
-                    col = (255, 0, 0, #red/positive weight
-                           255, 0, 0)
-                else:
-                    col = (0, 0, 255, #blue/negative weight
-                           0, 0, 255)
-            else:
-                if self.connections[conni].weight >=0:
-                    col = (255, 255, 0, #yellow/positive weight
-                           255, 255, 0)
-                else:
-                    col = (0, 255, 0, #green/negative weight
-                           0, 255, 0)
 
             fromNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].fromNode.ID ) ]
             toNode_pos:Vec2d = nodePoses[ nodeNumbers.index( self.connections[conni].toNode.ID ) ]
 
             if not self.connections[conni].isRecurrent:
-                pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
-                                                                fromNode_pos.y+2,
-                                                                toNode_pos.x,
-                                                                toNode_pos.y+2) ),
-                                                                ('c3B', col))
+                if self.connections[conni].weight >=0:
+                    col = (255, 0, 0)#, 255, 0, 0,) #red/positive weight
+                else:
+                    col = (0, 0, 255)#, 0, 0, 255) #blue/negative weight
+
+                shapesList.append( pyglet.shapes.Line(fromNode_pos.x,
+                                                      fromNode_pos.y+5,
+                                                      toNode_pos.x,
+                                                      toNode_pos.y+5,
+                                                      width=abs(int(self.connections[conni].weight*2))+1,
+                                                      color=col,
+                                                      batch=batch,
+                                                      group=groupConnections));
             else:
-                pyglet.graphics.draw(2, pygl.GL_LINES, ('v2i', (fromNode_pos.x,
-                                                                fromNode_pos.y-2,
-                                                                toNode_pos.x,
-                                                                toNode_pos.y-2) ),
-                                     ('c3B', col))
+                if self.connections[conni].weight >=0:
+                    col = (255, 255, 0) #yellow/positive weight
+                else:
+                    col = (0, 255, 0) #green/negative weight
+
+                if self.connections[conni].toNode.ID != self.connections[conni].fromNode.ID:
+                    shapesList.append( pyglet.shapes.Line(fromNode_pos.x,
+                                                          fromNode_pos.y+5,
+                                                          toNode_pos.x,
+                                                          toNode_pos.y+5,
+                                                          width=abs(int(self.connections[conni].weight*2))+1,
+                                                          color=col,
+                                                          batch=batch,
+                                                          group=groupConnections));
+                else: # tonode == fromnode
+                    # TODO: when nodes can recurrent to themselves, add a small visual element
+                    #   make a circle with the correct colour of the connection
+                    # TODO: THIS. IS. GOING. TO. BREAK.
+                    #   Past me; you're welcome 0/
+                    if self.connections[conni].toNode.ID != self.connections[conni].fromNode.ID:
+                        outlinewidth = abs(int(self.connections[conni].weight*2))+1;
+                        shapesList.append(pyglet.shapes.Circle(x=fromNode_pos.x, y=fromNode_pos.y,
+                                                               radius=20+outlinewidth//2,
+                                                               color=col,
+                                                               batch=batch,
+                                                               group=groupConnections));
+                        shapesList.append(pyglet.shapes.Circle(x=fromNode_pos.x, y=fromNode_pos.y,
+                                                               radius=20-outlinewidth//2,
+                                                               color=(0.7*255, 0.7*255, 0.7*255),
+                                                               batch=batch,
+                                                               group=groupConnections));
+
 
         # Draw all nodes (and ID's)
 
-        label = pyglet.text.Label('23423423',
-                                  font_name='Times New Roman',
-                                  font_size=14,
-                                  x=100, y=100,
-                                  anchor_x='center', anchor_y='center',
-                                  color=(0,0,0, 255))
-        nodeShapeOutline = pyglet.shapes.Circle(x=0, y=0, radius=21, color=(0, 0, 0))
-        nodeShape = pyglet.shapes.Circle(x=0, y=0, radius=20, color=(255, 255, 255))
-
         for nodei in range(len(nodePoses)):
-            nodeShapeOutline.x = nodePoses[nodei].x
-            nodeShapeOutline.y = nodePoses[nodei].y
-            nodeShape.x = nodePoses[nodei].x
-            nodeShape.y = nodePoses[nodei].y
-            label.x = nodePoses[nodei].x
-            label.y = nodePoses[nodei].y
+            shapesList.append(pyglet.text.Label(str(nodei),
+                                                font_name='Times New Roman', font_size=14,
+                                                x=nodePoses[nodei].x, y=nodePoses[nodei].y,
+                                                anchor_x='center', anchor_y='center',
+                                                color=(0,0,0, 255),
+                                                batch=batch,
+                                                group=groupLabels));
 
-            if nodei == self.input_size:
-                label.text = "B"
-            else:
-                label.text = str(nodeNumbers[nodei])
+            shapesList.append(pyglet.shapes.Circle(x=nodePoses[nodei].x, y=nodePoses[nodei].y,
+                                                   radius=21, color=(0, 0, 0),
+                                                   batch=batch,
+                                                   group=groupNodesOutlines));
+            shapesList.append(pyglet.shapes.Circle(x=nodePoses[nodei].x, y=nodePoses[nodei].y,
+                                                   radius=20, color=(255, 255, 255),
+                                                   batch=batch,
+                                                   group=groupNodes));
+            #outline.draw();
+            #node.draw();
 
-            nodeShapeOutline.draw()
-            nodeShape.draw()
-            label.draw()
-
-        # draw all the labels:
-        label.anchor_x="left";
+        # make all the input labels
         for labi,nodei in zip(range(len(inputlabels)),range(0, self.input_size)):
-            label.text = inputlabels[labi];
-            label.x = nodePoses[nodei].x+30;
-            label.y = nodePoses[nodei].y;
-            label.draw();
-
-
+            shapesList.append(pyglet.text.Label(inputlabels[labi],
+                                                font_name='Times New Roman', font_size=14,
+                                                x=nodePoses[nodei].x+30, y=nodePoses[nodei].y,
+                                                anchor_x='left', anchor_y='center',
+                                                color=(0,0,0, 255),
+                                                batch=batch,
+                                                group=groupLabels));
+        # make all the output labels
         for labi, nodei in zip(range(len(outputlabels)),range(len(self.nodes)-self.output_size, len(self.nodes))):
-            label.text = outputlabels[labi];
-            label.x = nodePoses[nodei].x+30;
-            label.y = nodePoses[nodei].y;
-            label.draw();
+            shapesList.append(pyglet.text.Label(inputlabels[labi],
+                                                font_name='Times New Roman', font_size=14,
+                                                x=nodePoses[nodei].x+30, y=nodePoses[nodei].y,
+                                                anchor_x='left', anchor_y='center',
+                                                color=(0,0,0, 255),
+                                                batch=batch,
+                                                group=groupLabels));
 
+        batch.draw();
 
     def JSONStoreNeuralNetwork(self, filepath="NeuralNetwork.json"):
         import jsonpickle
