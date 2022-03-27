@@ -131,7 +131,7 @@ class Statistics:
         self.axis[3].yaxis.set_ticks(list(range(0, len(genomesizes[0]), 1)))
         self.axis[3].set_yticklabels(labels=genomesizes[0])
         self.axis[3].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
-        self.axis[3].yaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
+        self.axis[3].yaxis.set_major_locator(mpl.ticker.MaxNLocator(20,integer=True, prune="both"));
 
         canvas = FigureCanvasAgg(self.figure)
         data, (w, h) = canvas.print_to_buffer()
