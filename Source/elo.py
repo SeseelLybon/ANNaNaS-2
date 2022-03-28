@@ -28,11 +28,13 @@ def rate_1v1(winner:Rating, loser:Rating, score:float, isDraw=False):
 
 # Probability of playerA winning over PlayerB
 def winChance(Ra:Rating, Rb:Rating):
-    step1 = Rb.rating-Ra.rating
-    step2 = step1/400
-    step3 = 10**step2
-    step4 = 1+step3
-    return 1/step4
+    step1 = Rb.rating-Ra.rating;
+    # 4 is a magic number, limits lowest winchance to 0.0001% and highest to 0.9999%
+    # After 4 there's clear deminishing returns, the asymtote is 0 and 1 and a higher precision is meaningless.
+    step2 = max([-4, min([4,step1/400])]);
+    step3 = 10**step2;
+    step4 = 1+step3;
+    return 1/step4;
 
 class Rating:
 
@@ -105,6 +107,22 @@ class Test_tictactoe(unittest.TestCase):
         log.logger.setLevel(DEBUG);
         from numpy.random import default_rng
         cls.rng = default_rng(11037)
+
+    def test_winChance(self):
+        # Added test to check for overflow issues
+        R_a = Rating(1500);
+        R_b = Rating(1500);
+        with self.subTest("baseline Winchance"):
+            self.assertTrue(winChance(R_a, R_b)==0.5, msg="winchance a, b failed");
+            self.assertTrue(winChance(R_b, R_a)==0.5, msg="winchance b, a failed");
+
+        R_c = Rating(1000000);
+        R_d = Rating(-100000);
+        with self.subTest("extreme case Winchance"):
+            self.assertTrue(winChance(R_c, R_d)>0.9, msg="winchance c, d failed");
+            self.assertTrue(winChance(R_d, R_c)<0.1, msg="winchance d, c failed");
+
+        pass;
 
     def test_NewRating(self):
         winscores = list(rng.random([10]))

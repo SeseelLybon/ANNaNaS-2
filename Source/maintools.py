@@ -42,4 +42,4 @@ class loadingBar:
         #log.logger.info(lbarstr)
         print(lbarstr)
 
-loadingbar = loadingBar(5000, 50);
+loadingbar = loadingBar(1000, 50);
