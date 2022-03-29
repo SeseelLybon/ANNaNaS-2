@@ -529,16 +529,12 @@ class NeuralNetwork:
 
 
         # Draw all nodes (and ID's)
-
-        # TODO; rewrite so the labels number input->output->hidden
-        # for nodei in range(self.input_size)+
-        #              range(len(nodePoses)-self.output_size, len(nodePoses))+
-        #              range(self.input_size, len(nodePoses)-self.output_size):
         for nodei in range(len(nodePoses)):
-            if nodei == self.input_size : #self.biasNodeID - this is shifted
+            if self.network[nodei].ID == self.biasNodeID : #self.biasNodeID - this is shifted
                 nodeL = "B";
             else:
-                nodeL = str(nodei);
+                nodeL = str(self.network[nodei].ID);
+            #nodeL = str(nodeid);
             shapesList.append(pyglet.text.Label(str(nodeL),
                                                 font_name='Times New Roman', font_size=14,
                                                 x=nodePoses[nodei].x, y=nodePoses[nodei].y,
@@ -578,6 +574,7 @@ class NeuralNetwork:
                                                 group=groupLabels));
 
         batch.draw();
+        return;
 
     def JSONStoreNeuralNetwork(self, filepath="NeuralNetwork.json"):
         import jsonpickle
