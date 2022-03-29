@@ -436,12 +436,6 @@ class NeuralNetwork:
         groupLabels = pyglet.graphics.OrderedGroup(3);
 
         shapesList = [];
-        #batchNodesOutlines = pyglet.graphics.Batch()
-        #batchNodes = pyglet.graphics.Batch()
-        #batchLabels = pyglet.graphics.Batch()
-
-        # batch.add(x)
-        # batch.draw()
 
         allNodes:List[List[Node]] = []
         nodePoses:List[Vec2d] = []
@@ -508,9 +502,9 @@ class NeuralNetwork:
 
                 if self.connections[conni].toNode.ID != self.connections[conni].fromNode.ID:
                     shapesList.append( pyglet.shapes.Line(fromNode_pos.x,
-                                                          fromNode_pos.y+5,
+                                                          fromNode_pos.y-5,
                                                           toNode_pos.x,
-                                                          toNode_pos.y+5,
+                                                          toNode_pos.y-5,
                                                           width=abs(int(self.connections[conni].weight*2))+1,
                                                           color=col,
                                                           batch=batch,
@@ -536,6 +530,10 @@ class NeuralNetwork:
 
         # Draw all nodes (and ID's)
 
+        # TODO; rewrite so the labels number input->output->hidden
+        # for nodei in range(self.input_size)+
+        #              range(len(nodePoses)-self.output_size, len(nodePoses))+
+        #              range(self.input_size, len(nodePoses)-self.output_size):
         for nodei in range(len(nodePoses)):
             if nodei == self.input_size : #self.biasNodeID - this is shifted
                 nodeL = "B";

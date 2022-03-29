@@ -169,6 +169,9 @@ def update(dt):
 
     log.logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
 
+    drawMain();
+    drawMPL();
+
     if replaygame:
         replaygame(population.bestMeeple);
 
@@ -177,6 +180,9 @@ def update(dt):
 
 @windowMain.event
 def on_draw():
+    drawMain();
+
+def drawMain():
     global inputlabels, outputlabels
     windowMain.clear()
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
@@ -189,10 +195,14 @@ def on_draw():
 
 @windowMPL.event
 def on_draw():
+    drawMPL();
+
+def drawMPL():
     windowMPL.clear();
     pyglet.gl.glClearColor(0.7,0.7,0.7,1)
     if statswindow.image is not None:
         statswindow.image.blit(-100,-50);
+
 
 def final_draw():
     log.logger.warning("Printing screens");
@@ -200,9 +210,11 @@ def final_draw():
     population.setBestMeeple();
     now = time.localtime();
     windowMain.switch_to()
+    drawMain();
     pyglet.image.get_buffer_manager().get_color_buffer().save("screenshots/%d_%d %d_%d_%d windowMain.png"%
                                                               (now.tm_mday, now.tm_mon, now.tm_hour, now.tm_min, now.tm_sec) )
     windowMPL.switch_to()
+    drawMPL();
     pyglet.image.get_buffer_manager().get_color_buffer().save("screenshots/%d_%d %d_%d_%d windowMPL.png"%
                                                               (now.tm_mday, now.tm_mon, now.tm_hour, now.tm_min, now.tm_sec) )
 

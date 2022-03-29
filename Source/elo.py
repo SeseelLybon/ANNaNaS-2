@@ -85,11 +85,11 @@ class Rating:
         # if prediction is correct, lower uncertainty
         if (winchance < 0.5 and winscore < 0.5) or (winchance > 0.5 and winscore > 0.5):
             newuncertainty *= 0.99
-            # if very correct, raise a bit more
+            ## if very correct, raise a bit more
         else:
-            newuncertainty *= 1.01
-        # if prediction is incorrect, raise uncertainty
-            # if very incorrect, raise a bit more
+            newuncertainty = min([newuncertainty*1.01,1]); # no need to have over 100% uncertainty.
+            # if prediction is incorrect, raise uncertainty
+            ## if very incorrect, raise a bit more
         self.uncertainty = newuncertainty
 
 
