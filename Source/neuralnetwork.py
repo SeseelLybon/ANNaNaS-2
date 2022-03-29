@@ -231,10 +231,11 @@ class NeuralNetwork:
         #   This will break a ton. Also add a visual indicator for the graph
 
         # grab 2 nodes that don't have a connection
-        #if isRecurrent:
-        #   rnglist = list( combinations(list(range(len(self.nodes))), 2))
-        #else:
-        rnglist = list( combinations(list(range(len(self.nodes))), 2))
+        if isRecurrent:
+            rnglist = list( combinations(list(range(len(self.nodes))), 2))+[(i,i) for i in range(self.input_size+2+self.output_size,len(self.nodes))]
+        else:
+            rnglist = list( combinations(list(range(len(self.nodes))), 2))
+
         rng.shuffle(rnglist)
         randomNode1:int = None
         randomNode2:int = None
@@ -243,7 +244,7 @@ class NeuralNetwork:
             randomNode2 = rngconi2
             if randomNode1 != self.biasNodeID and \
                     randomNode2 != self.biasNodeID:
-                if not self.checkIfConnected(randomNode1, randomNode2):
+                if not self.checkIfConnected(randomNode1, randomNode2, isRecurrent):
                     break;
 
         log.logger.debug("%s, %s : these connections were considered non-duplicate" % (randomNode1, randomNode2))
@@ -272,9 +273,12 @@ class NeuralNetwork:
 
 
 
-    def checkIfConnected(self, r1:int, r2:int) -> bool:
+    def checkIfConnected(self, r1:int, r2:int, isrecurrent:bool) -> bool:
         if self.nodes[r1].layer == self.nodes[r2].layer:
-            return True
+            if r1 == r2 and isrecurrent and self.nodes[r1].layer != 0 and self.nodes[r1].layer != self.layers_amount:
+                pass;
+            else:
+                return True
         if self.nodes[r1].isConnectedTo(self.nodes[r2]):
             return True
         if self.nodes[r2].isConnectedTo(self.nodes[r1]):
@@ -421,6 +425,7 @@ class NeuralNetwork:
             print("Connection ", self.connections[conni].innovationNumber,
                   "\n\tfrom Node", self.connections[conni].fromNode.ID,
                   "\n\tto Node", self.connections[conni].toNode.ID,
+                  "\n\tisRecurrent", self.connections[conni].isRecurrent,
                   "\n\tisEnabled", self.connections[conni].enabled,
                   "\n\tfrom layer", self.connections[conni].fromNode.layer,
                   "\n\tto layer", self.connections[conni].toNode.layer,
@@ -454,14 +459,7 @@ class NeuralNetwork:
             x:int = int(startX+(layeri*width)/
                         (self.layers_amount + 1.0))
             for nodei in range(len(allNodes[layeri])):
-
-                #if layeri%2==1 and not layeri == self.layers_amount:
-                #    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1)+
-                #                          (height/2)/(len(allNodes[layeri])+1)))
-                #else:
-                #    y:int = int(startY + ((nodei*height)/(len(allNodes[layeri])+1))
                 if layeri == 0 or layeri==self.layers_amount-1:
-                    #y:int = int(startY + ( (nodei*height)/(len(allNodes[layeri])+1)) )
                     y:int = int(startY + height*(nodei/(len(allNodes[layeri])-1)) );
                 else:
                     y:int = int(startY + height*((nodei+1)/(len(allNodes[layeri])+1)) );
@@ -514,18 +512,18 @@ class NeuralNetwork:
                     #   make a circle with the correct colour of the connection
                     # TODO: THIS. IS. GOING. TO. BREAK.
                     #   Past me; you're welcome 0/
-                    if self.connections[conni].toNode.ID != self.connections[conni].fromNode.ID:
-                        outlinewidth = abs(int(self.connections[conni].weight*2))+1;
-                        shapesList.append(pyglet.shapes.Circle(x=fromNode_pos.x, y=fromNode_pos.y,
-                                                               radius=20+outlinewidth//2,
-                                                               color=col,
-                                                               batch=batch,
-                                                               group=groupConnections));
-                        shapesList.append(pyglet.shapes.Circle(x=fromNode_pos.x, y=fromNode_pos.y,
-                                                               radius=20-outlinewidth//2,
-                                                               color=(0.7*255, 0.7*255, 0.7*255),
-                                                               batch=batch,
-                                                               group=groupConnections));
+                    #if self.connections[conni].toNode.ID == self.connections[conni].fromNode.ID:
+                    outlinewidth = abs(int(self.connections[conni].weight*2));
+                    shapesList.append(pyglet.shapes.Circle(x=fromNode_pos.x+10, y=fromNode_pos.y+10,
+                                                           radius=20+outlinewidth//2+1,
+                                                           color=col,
+                                                           batch=batch,
+                                                           group=groupConnections));
+                    shapesList.append(pyglet.shapes.Circle(x=fromNode_pos.x+10, y=fromNode_pos.y+10,
+                                                           radius=20-outlinewidth//2,
+                                                           color=(178, 178, 178),
+                                                           batch=batch,
+                                                           group=groupConnections));
 
 
         # Draw all nodes (and ID's)
@@ -565,7 +563,7 @@ class NeuralNetwork:
                                                 group=groupLabels));
         # make all the output labels
         for labi, nodei in zip(range(len(outputlabels)),range(len(self.nodes)-self.output_size, len(self.nodes))):
-            shapesList.append(pyglet.text.Label(inputlabels[labi],
+            shapesList.append(pyglet.text.Label(outputlabels[labi],
                                                 font_name='Times New Roman', font_size=14,
                                                 x=nodePoses[nodei].x+30, y=nodePoses[nodei].y,
                                                 anchor_x='left', anchor_y='center',
@@ -830,10 +828,34 @@ class TestNeuralNetwork(unittest.TestCase):
                                 self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],pairb[1], con_a.innovationNumber, con_b.innovationNumber));
 
 
+        pass;
+
+    @unittest.skip("not testing test_Graphics, test expensive")
+    def test_Graphics(self):
+        import time;
+        windowMain = pyglet.window.Window(1200, 800)
+        testinnovationHistory = list();
+        testANN = NeuralNetwork(3,3)
+        for i in range(5000):
+            testANN.mutate(testinnovationHistory);
+        testANN.generateNetwork();
+        starttime = time.time();
+
+        def update(dt):
+            windowMain.clear()
+            pyglet.gl.glClearColor(0.7,0.7,0.7,1)
+            testANN.drawNetwork(50, 50, 1100, 650, ["A","B","C"], ["D","E","F"]);
+            if time.time() > starttime + 20:
+                pyglet.app.exit();
+            return;
+
+        pyglet.clock.schedule_interval_soft(update, 1)
+        pyglet.app.run()
+        pass;
 
 
-    @unittest.skip("not testing test_Train")
-    @unittest.expectedFailure
+    #@unittest.skip("not testing test_Train")
+    #@unittest.expectedFailure
     def test_Train(self):
         testinnovationHistory = list();
         testANN = NeuralNetwork(3,3)
@@ -867,7 +889,7 @@ class TestNeuralNetwork(unittest.TestCase):
         pass;
 
     #@unittest.skip("not testing test_createGDimage")
-    @unittest.expectedFailure
+    #@unittest.expectedFailure
     def test_createGDimage(self):
         testinnovationHistory = list();
         testANN = NeuralNetwork(3,3)
@@ -879,7 +901,7 @@ class TestNeuralNetwork(unittest.TestCase):
         #print(DI)
         # Cannot assert
 
-    #@unittest.skip("not testing test_applyGDimage")
+    @unittest.skip("not testing test_applyGDimage")
     @unittest.expectedFailure
     def test_applyGDimage(self):
         testinnovationHistory = list();
@@ -904,38 +926,3 @@ class TestNeuralNetwork(unittest.TestCase):
         for post, di in zip(sorted(DI.values()),sorted(postweightschange)):
             self.assertAlmostEqual(post, di,
                                    msg="%f - %f"%(post, di));
-
-if __name__ == "__main__":
-
-    log.logger.info("Starting neuralnetwork.py as main")
-
-    #p = cProfile.Profile()
-    #p.runctx('oldbrain.ReLU(x)', locals={'x': 5}, globals={'oldbrain':oldbrain} )
-    #p.runcall(oldbrain.fire_network)
-    #p.print_stats()
-
-
-    doonce = True
-    if doonce:
-        test2innovationHistory:List[ConnectionHistory] = list()
-
-        log.logger.setLevel(log.logger.INFO)
-
-        ANN1 = NeuralNetwork(9, 9)
-        ANN1.generateNetwork()
-        log.logger.info("Made ANN1")
-        for dummy in range(500):
-            ANN1.mutate(test2innovationHistory)
-
-        output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
-        log.logger.info("ANN1 feedForward: %s" % output)
-
-
-        ANN1.JSONStoreNeuralNetwork()
-
-        ANN2:NeuralNetwork = NeuralNetwork.JSONLoadNeuralNetwork()
-
-        output = ANN1.feedForward([1,2,3,4,5,6,7,8,9])
-        log.logger.info("ANN1 feedForward: %s" % output)
-
-    log.logger.info("Finished neuralnetwork.py as main")

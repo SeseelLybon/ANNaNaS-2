@@ -43,8 +43,8 @@ class Node:
         Returns:
             bool: True if connected
         """
-        if node.layer == self.layer:
-            return False
+        #if node.layer == self.layer:
+        #    return False
 
         if node.layer < self.layer:
             for nodei in range(len(node.outputConnections)):
