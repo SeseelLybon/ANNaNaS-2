@@ -9,7 +9,7 @@ import maintools
 log = maintools.colLogger("meeple")
 
 class Meeple:
-    def __init__(self, braininputs:int, brainoutputs:int, isHollow=False):
+    def __init__(self, braininputs:int, brainoutputs:int, isHollow=False, userecurrency:bool=True):
         self.score:int=1
         self.fitness:float = 1
         self.unadjustedFitness:float = 0
@@ -24,7 +24,7 @@ class Meeple:
         if isHollow:
             self.brain = None;
         else:
-            self.brain:NeuralNetwork = NeuralNetwork(braininputs, brainoutputs, isHollow)
+            self.brain:NeuralNetwork = NeuralNetwork(braininputs, brainoutputs, isHollow, userecurrency=userecurrency)
 
         self.trueskill = ts.Rating(15)
         self.elo = elo.Rating()

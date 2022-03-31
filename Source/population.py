@@ -19,21 +19,27 @@ from maintools import rng
 
 class Population:
 
-    def __init__(self, pop_size:int, input_size:int, output_size:int, isHollow=False ):
+    def __init__(self, pop_size:int, input_size:int, output_size:int, isHollow=False, userecurrency:bool=True):
         self.UUID = uuid.uuid4();
         #self.ID = str(rng.bytes(4));
         self.innovationHistory:List[ConnectionHistory] = list()
         self.meeples:List[Meeple] = list()
         self.species:List[Species] = []
-        self.nextSpeciesID = 0
+        self.nextSpeciesID:int = 0
+        self.useRecurrency = userecurrency;
 
-        self.size = pop_size
-        self.input_size = input_size
-        self.output_size = output_size
-        self.generation = 0
+        self.size:int = pop_size
+        self.input_size:int = input_size
+        self.output_size:int = output_size
+        self.generation:int = 0
 
-        self.maxStaleness = 100 # how often a species can not improve before it's considered stale/stuck
-        self.protectedSpecies = 2;
+        self.maxStaleness:int = 15 # how often a species can not improve before it's considered stale/stuck
+
+        self.targetSpecies:int = 10
+        self.protectedSpecies:int = 10
+
+        self.compatibilityModifier:float = 0.01;#0.01;
+        self.compatibilityThreshold:float = 3
 
         self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
         self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
@@ -42,7 +48,7 @@ class Population:
         #self.speciesScoreHistogram:List[List[float]] = list()
 
         for i in range(self.size):
-            self.meeples.append(Meeple(input_size, output_size))
+            self.meeples.append(Meeple(input_size, output_size, userecurrency=self.useRecurrency))
             self.meeples[-1].brain.mutate(self.innovationHistory)
             self.meeples[-1].brain.generateNetwork()
 
@@ -179,6 +185,7 @@ class Population:
         self.bestMeeple.brain.JSONStoreNeuralNetwork(filepath="BestMeepleBrain.json")
         #self.population_dump();
 
+        self.innovationHistory[:] = self.innovationHistory[:1000]
         for meep in self.meeples:
             meep.brain.generateNetwork()
 
@@ -193,7 +200,7 @@ class Population:
         for meep in self.meeples:
             speciesfound = False
             for specie in self.species:
-                if specie.checkSameSpecies(meep, specie.bestMeeple):
+                if specie.checkSameSpecies(meep, specie.bestMeeple,self.compatibilityThreshold):
                     specie.addToSpecies(meep)
                     speciesfound = True
                     break
@@ -202,7 +209,15 @@ class Population:
                 self.species.append(Species(meep=meep, speciesID=self.nextSpeciesID))
                 self.nextSpeciesID+=1
 
-        log.logger.info("Added %d new species" % (len(self.species)-temp))
+        if len(self.species) > self.targetSpecies:
+            self.compatibilityThreshold+=self.compatibilityModifier;
+        elif  len(self.species) < self.targetSpecies:
+            self.compatibilityThreshold-=self.compatibilityModifier;
+        else:
+            pass;
+        self.compatibilityThreshold = min( 6,max([self.compatibilityThreshold, 2]));
+
+        log.logger.info("Added %d new species with compatibilityThreshold %.1f" % (len(self.species)-temp,self.compatibilityThreshold));
 
 
     def calculateFitness(self):
@@ -221,7 +236,7 @@ class Population:
         prekill = len(self.species)
 
         # protect 2 fittest species from staleness, then add rest of not stale species.
-        temp = self.species[:self.protectedSpecies];
+        temp = self.species[:self.protectedSpecies+1];
         self.species[:] = [ specie for specie in self.species if specie.staleness < self.maxStaleness]
         if len(self.species) <= self.protectedSpecies:
             self.species[:] = temp[:];
@@ -248,7 +263,7 @@ class Population:
         averageSum = self.getAverageFitnessSum()
 
         #self.species[:] = [ specie for specie in self.species if ((specie.averageFitness/averageSum) * len(self.pop) >= 1) ]
-        temp = self.species[:self.protectedSpecies];
+        temp = self.species[:self.protectedSpecies+1];
         self.species[:] = [specie for specie in self.species if averageSum > 0 and ((specie.averageFitness/averageSum) * self.size >= 1)]
 
         if len(self.species) <= self.protectedSpecies:

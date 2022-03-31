@@ -19,24 +19,32 @@ from typing import Tuple
 #    sct.shot()
 
 # Use "from this import *" ?
-
+import time
 
 def tictactoeMain(population:Population):
-
     for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
-        for i in range(100000):
-            if cell_test(meepi, population):
-                continue;
-            else:
-                break;
 
-        #while cell_test(meepi, population) and population.meeples[meepi].score <= (math.factorial(9)): # score 9!
-        #    continue;
+        # repeat tests n times, sum score and devide by n
+        runningSum = 0;
+        n = 5
+        for i in range(n):
+            for i in range(10000):
+                if cell_test(meepi, population):
+                    continue;
+                else:
+                    break;
 
-        while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
-            pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
-                continue;
+            #while cell_test(meepi, population) and population.meeples[meepi].score <= (math.factorial(9)): # score 9!
+            #    continue;
+
+            while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
+                pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
+                    continue;
+            runningSum+=population.meeples[meepi].score
+            population.meeples[meepi].score = 1;
+
+        population.meeples[meepi].score = runningSum/n;
 
         #for i in range(1,8,2):
         #    for players in combinations(list(range(popcap//i)), 2):

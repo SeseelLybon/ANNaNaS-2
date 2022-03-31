@@ -21,11 +21,11 @@ def xorMain(population:Population):
 
     test = [[0,0],[1,0],[0,1],[1,1]];
 
-    #answer = [[0],[1],[1],[0]]    # XOR
+    answer = [[0],[1],[1],[0]]    # XOR
     #answer = [[1],[0],[0],[1]]   # XNOR
     #answer = [[0],[1],[1],[1]]   # OR
     #answer = [[1],[0],[0],[0]]   # NOR
-    answer = [[1],[1],[1],[0]]   # AND
+    #answer = [[1],[1],[1],[0]]   # AND
 
     for player in population.meeples:
         total = 0;

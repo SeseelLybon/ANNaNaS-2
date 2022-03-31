@@ -1,3 +1,4 @@
+from __future__ import annotations
 # Code stolen from, I mean inspired by CodeBullet, as per usual
 #import multiprocessing
 #import statistics
@@ -46,8 +47,8 @@ if game == availgames.tictactoe:
     maintools.loadingbar = maintools.loadingBar(popcap, 50);
 elif game == availgames.xor:
     from games.xor.main import xorMain
-    popcap = 5000
-    population = Population(popcap, 2, 1) # tictactoe compatible population
+    popcap = 1000
+    population = Population(popcap, 2, 1, userecurrency=False) # tictactoe compatible population
     playgame = xorMain;
     replaygame = None;
     inputlabels = ["A", "B"];
@@ -145,18 +146,18 @@ def update(dt):
 
 
     print("")
-    meep1:Meeple = population.meeples[0]
-    meep2:Meeple = population.meeples[1]
-    log.logger.info("Meep1: %.1f %.3f" %
-                 (meep1.elo.rating, meep1.elo.uncertainty))
-    log.logger.info("Meep2: %.1f %.3f" %
-                 (meep2.elo.rating, meep2.elo.uncertainty))
 
     log.logger.info("Games took :%.2fs" % (time.time()-lasttime[0]));
 
     lasttime[1] = time.time()
     population.naturalSelection()
     log.logger.info("NaS took :%.2fs" % (time.time()-lasttime[1]));
+    meep1:Meeple = population.meeples[0]
+    meep2:Meeple = population.meeples[1]
+    log.logger.info("Meep1: %.1f %.3f" %
+                    (meep1.elo.rating, meep1.elo.uncertainty))
+    log.logger.info("Meep2: %.1f %.3f" %
+                    (meep2.elo.rating, meep2.elo.uncertainty))
 
     lasttime[2] = time.time()
     statswindow.update(population.generation,
@@ -167,10 +168,10 @@ def update(dt):
     log.logger.info("Stats took :%.2fs" % (time.time()-lasttime[2]));
 
 
-    log.logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
-
     drawMain();
     drawMPL();
+    log.logger.info("Gen took :%.2fs" % (time.time()-lasttime[0]));
+
 
     if replaygame:
         replaygame(population.bestMeeple);

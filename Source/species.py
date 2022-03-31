@@ -24,12 +24,11 @@ class Species:
 
         self.exceesCoeff:float = 1
         self.weightDiffCoeff:float = 1
-        self.compatibilityThreshold:float = 3
 
 
 
 
-    def checkSameSpecies(self, meepi:Meeple, meepj:Meeple ) -> bool:
+    def checkSameSpecies(self, meepi:Meeple, meepj:Meeple, compatTresh:float) -> bool:
         excessAndDisjoint:float = self.getExcessDisjoint(meepi.brain, meepj.brain)
         averageWeightDiff:float = self.averageWeightDiff(meepi.brain, meepj.brain)
 
@@ -38,7 +37,7 @@ class Species:
             largeConnectionsNormaliser = 1
 
         compatibility:float = (self.exceesCoeff*excessAndDisjoint/largeConnectionsNormaliser)+(self.weightDiffCoeff*averageWeightDiff)
-        return self.compatibilityThreshold > compatibility
+        return compatTresh > compatibility
 
     def addToSpecies(self, meep:Meeple):
         self.meeples.append(meep)

@@ -96,7 +96,7 @@ class Statistics:
         self.axis[1].set_title("Best Score/gen");
         self.axis[1].set_xlabel("Generation");
         self.axis[1].set_ylabel("Score");
-        self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator())
+        self.axis[1].xaxis.set_major_locator(mpl.ticker.MaxNLocator(integer=True))
 
         # Graph for the average current genscore
         axis1_2 = self.axis[1].twiny()

@@ -29,13 +29,14 @@ log = maintools.colLogger("neuralnetwork")
 
 class NeuralNetwork:
 
-    def __init__(self, input_size:int, output_size:int, ID:int=-1, hollow:bool=False):
+    def __init__(self, input_size:int, output_size:int, ID:int=-1, hollow:bool=False, userecurrency:bool=True):
         global nextNeuralNetworkID
         self.input_size:int = input_size
         self.layers_amount:int = 2
         self.output_size:int = output_size
         self.nextNodeID:int = 0
         self.biasNodeID:int # bias is the last node in self.nodes
+        self.useRecurrency = userecurrency;
         if ID == -1:
             self.ID = nextNeuralNetworkID
             nextNeuralNetworkID+=1
@@ -215,7 +216,7 @@ class NeuralNetwork:
     def addConnection(self, innovationHistory:List[ConnectionHistory]) -> None:
 
         isRecurrent = False
-        if rng.uniform() < 0.10:
+        if self.useRecurrency and rng.uniform() < 0.10:
             log.logger.debug("Adding new Recurrent Connection")
             isRecurrent = True
         else:
@@ -356,7 +357,10 @@ class NeuralNetwork:
 
     def crossover(self, parent2:NeuralNetwork) -> NeuralNetwork:
         global nextNeuralNetworkID
-        child:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, ID=nextNeuralNetworkID, hollow=True)
+        child:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size,
+                                            ID=nextNeuralNetworkID,
+                                            hollow=True,
+                                            userecurrency=self.useRecurrency)
         child.connections.clear()
         child.nodes.clear()
         child.layers_amount = self.layers_amount
@@ -400,7 +404,7 @@ class NeuralNetwork:
         return -1
 
     def clone(self) -> NeuralNetwork:
-        clone:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, self.ID, hollow=True)
+        clone:NeuralNetwork = NeuralNetwork(self.input_size, self.output_size, self.ID, hollow=True, userecurrency=self.useRecurrency)
         for nodei in range(len(self.nodes)):
             clone.nodes.append(self.nodes[nodei].clone())
 
@@ -459,8 +463,13 @@ class NeuralNetwork:
             x:int = int(startX+(layeri*width)/
                         (self.layers_amount + 1.0))
             for nodei in range(len(allNodes[layeri])):
-                if layeri == 0 or layeri==self.layers_amount-1:
+                if layeri == 0:
                     y:int = int(startY + height*(nodei/(len(allNodes[layeri])-1)) );
+                elif layeri==self.layers_amount-1:
+                    if len(allNodes[layeri]) == 1:
+                        y:int = int(startY + height*.5);
+                    else:
+                        y:int = int(startY + height*(nodei/(len(allNodes[layeri])-1)) );
                 else:
                     y:int = int(startY + height*((nodei+1)/(len(allNodes[layeri])+1)) );
 
