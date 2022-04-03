@@ -44,6 +44,16 @@ if game == availgames.tictactoe:
     population = Population(popcap, 2+9+9, 9) # tictactoe compatible population
     playgame = tictactoeMain;
     replaygame = None;
+    inputlabels = ["X","O",
+                   "1,1", "1,2", "1,3",
+                   "2,1", "2,2", "2,3",
+                   "3,1", "3,2", "3,3",
+                   "1,1", "1,2", "1,3",
+                   "2,1", "2,2", "2,3",
+                   "3,1", "3,2", "3,3"];
+    outputlabels = ["1,1", "1,2", "1,3",
+                    "2,1", "2,2", "2,3",
+                    "3,1", "3,2", "3,3"];
     maintools.loadingbar = maintools.loadingBar(popcap, 50);
 elif game == availgames.xor:
     from games.xor.main import xorMain
@@ -152,12 +162,6 @@ def update(dt):
     lasttime[1] = time.time()
     population.naturalSelection()
     log.logger.info("NaS took :%.2fs" % (time.time()-lasttime[1]));
-    meep1:Meeple = population.meeples[0]
-    meep2:Meeple = population.meeples[1]
-    log.logger.info("Meep1: %.1f %.3f" %
-                    (meep1.elo.rating, meep1.elo.uncertainty))
-    log.logger.info("Meep2: %.1f %.3f" %
-                    (meep2.elo.rating, meep2.elo.uncertainty))
 
     lasttime[2] = time.time()
     statswindow.update(population.generation,

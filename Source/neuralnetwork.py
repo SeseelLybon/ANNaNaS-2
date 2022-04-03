@@ -740,7 +740,8 @@ class TestNeuralNetwork(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         from logging import DEBUG
-        log.logger.setLevel(DEBUG);
+        from logging import INFO
+        log.logger.setLevel(INFO);
         from numpy.random import default_rng
         #from maintools import rng
         #cls.rng = default_rng(11037)
@@ -756,7 +757,7 @@ class TestNeuralNetwork(unittest.TestCase):
         with self.subTest("basic creation"):
             testinnovationHistory = list();
             testANN = NeuralNetwork(3,3)
-            for i in range(1000):
+            for i in range(10000000):
                 testANN.mutate(testinnovationHistory);
             testANN.generateNetwork();
             #testANN.printNetwork();
@@ -811,16 +812,6 @@ class TestNeuralNetwork(unittest.TestCase):
             # Expecting the two values to be unequal since the recurrency must influence the second feedforward.
             self.assertFalse(errorrate1 == errorrate2);
 
-
-    #@unittest.expectedFailure
-    def test_recurrency(self):
-        testinnovationHistory = list();
-        testANN = NeuralNetwork(3,3)
-        for i in range(10000):
-            testANN.mutate(testinnovationHistory);
-        testANN.generateNetwork();
-        testANN.printNetwork();
-
         with self.subTest("No duplicate connections"):
             for con_a in testANN.connections:
                 paira = (con_a.toNode.ID, con_a.fromNode.ID);
@@ -829,15 +820,13 @@ class TestNeuralNetwork(unittest.TestCase):
                     pairb = (con_b.toNode.ID, con_b.fromNode.ID);
                     if paira[0] == pairb[0] and paira[1] == pairb[1]:
                         #if not appearedoncealready:
-                        if con_a.innovationNumber == con_b.innovationNumber:
-                            # this is probably itself
-                            appearedoncealready = True;
-                        else:
-                            with self.subTest("No duplicate connections"):
+                        with self.subTest("No duplicate connections"):
+                            if (con_a.enabled and con_b.enabled) and con_a.innovationNumber == con_b.innovationNumber:
+                                # this is probably itself
+                                appearedoncealready = True;
+                            else:
                                 self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],pairb[1], con_a.innovationNumber, con_b.innovationNumber));
 
-
-        pass;
 
     @unittest.skip("not testing test_Graphics, test expensive")
     def test_Graphics(self):

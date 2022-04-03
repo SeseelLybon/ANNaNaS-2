@@ -36,7 +36,7 @@ class Population:
         self.maxStaleness:int = 15 # how often a species can not improve before it's considered stale/stuck
 
         self.targetSpecies:int = 10
-        self.protectedSpecies:int = 10
+        self.protectedSpecies:int = 5
 
         self.compatibilityModifier:float = 0.01;#0.01;
         self.compatibilityThreshold:float = 3
@@ -146,6 +146,8 @@ class Population:
 
         log.logger.info("highest score %.4f" % self.highestScore)
         log.logger.info("highest fitness %.4f" % self.highestFitness)
+        log.logger.info("Meep1: %.1f %.3f" %
+                        (self.bestMeeple.elo.rating, self.bestMeeple.elo.uncertainty))
 
         log.logger.info("Species %d:%d:%d" % (species_pre_speciate, species_pre_cull, len(self.species)))
 
