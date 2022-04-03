@@ -757,7 +757,7 @@ class TestNeuralNetwork(unittest.TestCase):
         with self.subTest("basic creation"):
             testinnovationHistory = list();
             testANN = NeuralNetwork(3,3)
-            for i in range(10000000):
+            for i in range(10000):
                 testANN.mutate(testinnovationHistory);
             testANN.generateNetwork();
             #testANN.printNetwork();
