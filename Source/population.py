@@ -105,7 +105,6 @@ class Population:
             if meep.score <=1:
                 meep.score = 1;
 
-
         log.logger.info("Starting Natural Selection")
 
         log.logger.info("Speciating")
@@ -125,10 +124,11 @@ class Population:
             id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,round(spec.bestFitness,2), round(spec.averageFitness, 2)))
         id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:5];
 
-        log.logger.info("Species %d %d %d %s" % ( self.size,
+        log.logger.info("Species\t%d\t%d\t%d" % ( self.size,
                                            sum([len(x.meeples) for x in self.species]),
-                                           len(self.species),
-                                           id_s ) )
+                                           len(self.species)) )
+        for i in range(len(id_s)):
+            log.logger.info("\t%d\t%d\t%d\t%.3f\t%.3f"%id_s[i])
 
         species_pre_cull = len(self.species)
         log.logger.info("Sorting Species")
@@ -217,7 +217,7 @@ class Population:
             self.compatibilityThreshold-=self.compatibilityModifier;
         else:
             pass;
-        self.compatibilityThreshold = min( 6,max([self.compatibilityThreshold, 2]));
+        self.compatibilityThreshold = min( 4,max([self.compatibilityThreshold, 1]));
 
         log.logger.info("Added %d new species with compatibilityThreshold %.1f" % (len(self.species)-temp,self.compatibilityThreshold));
 

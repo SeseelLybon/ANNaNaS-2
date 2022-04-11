@@ -27,9 +27,9 @@ class loadingBar:
         self.gamestep:int = maxgames//steps;
 
     def loadingBarIncrement(self)->None:
-        self.curgame+=1
         if self.curgame%self.gamestep==0:
             print("=",end="")
+        self.curgame+=1
 
     def printLoadingbar(self)->None:
         time.sleep(0.3)

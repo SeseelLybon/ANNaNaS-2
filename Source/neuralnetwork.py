@@ -348,7 +348,7 @@ class NeuralNetwork:
             log.logger.debug("RNG: Add new connection")
             self.addConnection(innovationHistory)
 
-        elif rng.uniform() < 0.80:#*stalenessMod:
+        elif rng.uniform() < 0.95:#*stalenessMod:
             log.logger.debug("RNG: Mutate weights")
             random.choice(self.connections).mutateWeight();
             #if len(self.connections)!=0:
