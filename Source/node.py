@@ -25,9 +25,12 @@ class Node:
 
     def fire(self, maxLayer:int) -> None:
         if self.layer == maxLayer:
-            self.outputValue = self.ReLU1(self.inputSum)
+            #self.outputValue = self.ReLU1(self.inputSum);
+            self.outputValue = self.inputSum;
+
         if self.layer != 0:
-            self.outputValue = self.ReLU1(self.inputSum)
+            #self.outputValue = self.ReLU1(self.inputSum)
+            self.outputValue = self.inputSum;
 
         for coni in range(len(self.outputConnections)):
             if self.outputConnections[coni].enabled:
@@ -128,8 +131,11 @@ class Connection:
         if rng.uniform() < .05: # 5% chance to drastically change the weight
             #self.weight = rng.uniform(-1,1)
             self.weight = rng.normal()
-        else:# rand1 < .25: # n% chance to slightly change the weight should make it more stable
+        elif rng.uniform() < .25:# rand1 < .25: # n% chance to slightly change the weight should make it more stable
             self.weight += rng.normal()/10
+            #self.weight = np.min([1, np.max([self.weight, -1])])
+        else:# rand1 < .25: # n% chance to slightly change the weight should make it more stable
+            self.weight += rng.normal()/20
             #self.weight = np.min([1, np.max([self.weight, -1])])
         min(5, max(-5, self.weight))
 

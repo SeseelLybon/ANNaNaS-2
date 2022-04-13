@@ -9,6 +9,7 @@ import maintools
 from maintools import rng
 log = maintools.colLogger("tictactoe")
 from meeple import Meeple
+import elo
 
 from typing import Tuple
 
@@ -20,23 +21,25 @@ from typing import Tuple
 
 # Use "from this import *" ?
 import time
+from multiprocessing import Pool
 
 def tictactoeMain(population:Population):
     for meepi in range(population.size):
+    #for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
 
         # repeat tests n times, sum score and devide by n
         runningSum = 0;
         n = 5
         for i in range(n):
-            for i in range(10000):
-                if cell_test(meepi, population):
-                    continue;
-                else:
-                    break;
+            #for i in range(5000):
+                #if cell_test2(meepi, population):
+                #    continue;
+                #else:
+                #    break;
 
-            #while cell_test(meepi, population) and population.meeples[meepi].score <= (math.factorial(9)): # score 9!
-            #    continue;
+            while cell_test2(meepi, population) and population.meeples[meepi].score <= (362880*45): # score 9!*45
+                continue;
 
             while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
                 pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
@@ -58,19 +61,21 @@ def cell_test2(meepi:int, population:Population) -> bool:
     meep = population.meeples[meepi]
 
     board = list(rng.integers(0,3, [9])); # create a random board
+    board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
     while checkWinner(board): # check if it's a valid board (nobody won yet)
         board = list(rng.integers(0,3, [9])); # create a random board
+        board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
 
-    board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
     board_free = [ 1 if c == 0 else 0 for c in board ];
 
-    meep.think(vision=[1,0]+board+board_free)
+    meep.think(vision=board)
     decision = meep.decision
     index = decision.index(max(decision))
     if board[index] == 0:
-        meep.score += 1
+        meep.score += 9-sum(board)
         return True;
     else:
+        #meep.score -= 1
         return False;
 
 celltestscoreX=[];
@@ -92,21 +97,19 @@ def cell_test(meepi:int, population:Population) -> bool:
     for turnstep in range(8):
         board_free = [ 1 if c == 0 else 0 for c in board ];
 
-        meep.think(vision=[1,0]+board+board_free)
+        meep.think(vision=board+board_free)
         decision = meep.decision
         index = decision.index(max(decision))
         if board[index] == 0:
             if turn=="X":
                 board[index] = 1
-                meep.score += turnstep;
+                meep.score += turnstep*2;
             elif turn=="O":
                 board[index] = 1
-                meep.score += turnstep;
+                meep.score += turnstep*2;
         else:
             return False;
     return True;
-
-import elo
 
 def pre_game(players:Tuple[Meeple,Meeple]):
 
@@ -124,17 +127,17 @@ def pre_game(players:Tuple[Meeple,Meeple]):
         if endgamestate[2] == 1:
             meep1.elo.newRating(winchance1, 1)
             meep2.elo.newRating(winchance2, 0)
-            meep1.score += 10**5*winchance2
+            meep1.score += 1000*winchance2
         elif endgamestate[2] == 2:
             meep1.elo.newRating(winchance1, 0)
             meep2.elo.newRating(winchance2, 1)
-            meep2.score += 10**6*winchance1
+            meep2.score += 10000*winchance1
         return True
     elif endgamestate[0] == "Draw":
         meep1.elo.newRating(winchance1, 0.25)
         meep2.elo.newRating(winchance2, 0.75)
-        meep1.score += 10**3*winchance2
-        meep2.score += 10**4*winchance1
+        meep1.score += 10*winchance2
+        meep2.score += 100*winchance1
         return True
     return False
 

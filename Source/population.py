@@ -33,13 +33,13 @@ class Population:
         self.output_size:int = output_size
         self.generation:int = 0
 
-        self.maxStaleness:int = 15 # how often a species can not improve before it's considered stale/stuck
+        self.maxStaleness:int = 100 # how often a species can not improve before it's considered stale/stuck
 
         self.targetSpecies:int = 10
         self.protectedSpecies:int = 5
 
         self.compatibilityModifier:float = 0.01;#0.01;
-        self.compatibilityThreshold:float = 3
+        self.compatibilityThreshold:float = 2
 
         self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
         self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
@@ -114,21 +114,6 @@ class Population:
         self.updateStats()
         self.print_deathrate()
 
-        id_s = []
-        for spec in self.species:
-            # Specie's ID
-            # Amount of meeps in Specie
-            # How stale Specie is
-            # Highest fitness in Specie
-            # Average fitness of Specie
-            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,round(spec.bestFitness,2), round(spec.averageFitness, 2)))
-        id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:5];
-
-        log.logger.info("Species\t%d\t%d\t%d" % ( self.size,
-                                           sum([len(x.meeples) for x in self.species]),
-                                           len(self.species)) )
-        for i in range(len(id_s)):
-            log.logger.info("\t%d\t%d\t%d\t%.3f\t%.3f"%id_s[i])
 
         species_pre_cull = len(self.species)
         log.logger.info("Sorting Species")
@@ -143,6 +128,22 @@ class Population:
         log.logger.info("Killing Species")
         self.killStaleSpecies()
         self.killBadSpecies()
+
+        id_s = []
+        for spec in self.species:
+            # Specie's ID
+            # Amount of meeps in Specie
+            # How stale Specie is
+            # Highest fitness in Specie
+            # Average fitness of Specie
+            id_s.append((spec.speciesID, len(spec.meeples), spec.staleness ,round(spec.bestFitness,2), round(spec.averageFitness, 2)))
+        id_s.sort(key=lambda x: x[3]); id_s.reverse();  id_s[:] = id_s[:5];
+
+        log.logger.info("Species\t%d\t%d\t%d" % ( self.size,
+                                                  sum([len(x.meeples) for x in self.species]),
+                                                  len(self.species)) )
+        for i in range(len(id_s)):
+            log.logger.info("\t%d\t%d\t%d\t%.3f\t%.3f"%id_s[i])
 
         log.logger.info("highest score %.4f" % self.highestScore)
         log.logger.info("highest fitness %.4f" % self.highestFitness)

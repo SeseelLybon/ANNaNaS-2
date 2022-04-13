@@ -350,7 +350,8 @@ class NeuralNetwork:
 
         elif rng.uniform() < 0.95:#*stalenessMod:
             log.logger.debug("RNG: Mutate weights")
-            random.choice(self.connections).mutateWeight();
+            for con in random.choices(self.connections, k=len(self.connections)//4):
+                con.mutateWeight()
             #if len(self.connections)!=0:
             #    for conni in random.choices(range(len(self.connections)), k=len(self.connections)//8):
             #        self.connections[conni].mutateWeight()

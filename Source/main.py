@@ -41,14 +41,10 @@ if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
     popcap = 1000
     #population = Population(popcap, 11, 9) # tictactoe compatible population
-    population = Population(popcap, 2+9+9, 9) # tictactoe compatible population
+    population = Population(popcap, 9, 9) # tictactoe compatible population
     playgame = tictactoeMain;
     replaygame = None;
-    inputlabels = ["X","O",
-                   "1,1", "1,2", "1,3",
-                   "2,1", "2,2", "2,3",
-                   "3,1", "3,2", "3,3",
-                   "1,1", "1,2", "1,3",
+    inputlabels = ["1,1", "1,2", "1,3",
                    "2,1", "2,2", "2,3",
                    "3,1", "3,2", "3,3"];
     outputlabels = ["1,1", "1,2", "1,3",
