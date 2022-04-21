@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from itertools import combinations
+from itertools import permutations
 
 
 from population import Population
@@ -28,26 +29,11 @@ def tictactoeMain(population:Population):
     #for meepi in range(population.size):
         maintools.loadingbar.loadingBarIncrement();
 
-        # repeat tests n times, sum score and devide by n
-        runningSum = 0;
-        n = 5
-        for i in range(n):
-            #for i in range(5000):
-                #if cell_test2(meepi, population):
-                #    continue;
-                #else:
-                #    break;
+        cell_test3(meepi, population);
 
-            while cell_test2(meepi, population) and population.meeples[meepi].score <= (362880*45): # score 9!*45
+        while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
+            pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
                 continue;
-
-            while pre_game((population.meeples[rng.integers(0,population.size)], population.meeples[meepi])) and \
-                pre_game((population.meeples[meepi], population.meeples[rng.integers(0,population.size)])):
-                    continue;
-            runningSum+=population.meeples[meepi].score
-            population.meeples[meepi].score = 1;
-
-        population.meeples[meepi].score = runningSum/n;
 
         #for i in range(1,8,2):
         #    for players in combinations(list(range(popcap//i)), 2):
@@ -56,6 +42,24 @@ def tictactoeMain(population:Population):
 
 
 
+def cell_test3(meepi:int, population:Population):
+    meep = population.meeples[meepi]
+
+    for board in combinations([0,0,0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2], 9):
+        #board = list(rng.integers(0,3, [9])); # create a random board
+        #board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
+        if 0 not in board or checkWinner(board): # check if it's a valid board (nobody won yet):
+            continue;
+
+        board_free = [ 1 if c == 0 else 0 for c in board ];
+
+        meep.think(vision=board, postClean=True);
+        decision = meep.decision
+        index = decision.index(max(decision))
+        if board[index] == 0:
+            meep.score += 9-sum(board_free)
+        else:
+            meep.score -= 1
 
 def cell_test2(meepi:int, population:Population) -> bool:
     meep = population.meeples[meepi]
@@ -68,7 +72,7 @@ def cell_test2(meepi:int, population:Population) -> bool:
 
     board_free = [ 1 if c == 0 else 0 for c in board ];
 
-    meep.think(vision=board)
+    meep.think(vision=board, postClean=True);
     decision = meep.decision
     index = decision.index(max(decision))
     if board[index] == 0:
