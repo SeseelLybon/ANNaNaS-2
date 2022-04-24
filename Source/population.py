@@ -142,6 +142,7 @@ class Population:
         log.logger.info("Species\t%d\t%d\t%d" % ( self.size,
                                                   sum([len(x.meeples) for x in self.species]),
                                                   len(self.species)) )
+        log.logger.info("\tID\tmeeps\tstale\tmax fit\t avg. fit")
         for i in range(len(id_s)):
             log.logger.info("\t%d\t%d\t%d\t%.3f\t%.3f"%id_s[i])
 
