@@ -335,20 +335,20 @@ class NeuralNetwork:
             self.addConnection(innovationHistory)
 
         # Random thing that makes the population mutate the staler it gets.
-        if staleness == 0:
-            stalenessMod:float = 1
-        else:
-            stalenessMod:float = 1+staleness/500
+        #if staleness == 0:
+        #    stalenessMod:float = 1
+        #else:
+        #    stalenessMod:float = 1+staleness/500
 
-        if rng.uniform() < 0.01:#*stalenessMod:
+        if rng.uniform() < 0.0005:#*stalenessMod:
             log.logger.debug("RNG: Add new node")
             self.addNode(innovationHistory)
 
-        elif rng.uniform() < 0.05:#*stalenessMod:
+        elif rng.uniform() < 0.005:#*stalenessMod:
             log.logger.debug("RNG: Add new connection")
             self.addConnection(innovationHistory)
 
-        elif rng.uniform() < 0.95:#*stalenessMod:
+        elif rng.uniform() < 0.80:#*stalenessMod:
             log.logger.debug("RNG: Mutate weights")
             for con in random.choices(self.connections, k=len(self.connections)//4):
                 con.mutateWeight()

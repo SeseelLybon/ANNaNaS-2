@@ -33,13 +33,13 @@ class Population:
         self.output_size:int = output_size
         self.generation:int = 0
 
-        self.maxStaleness:int = 100 # how often a species can not improve before it's considered stale/stuck
+        self.maxStaleness:int = 15 # how often a species can not improve before it's considered stale/stuck
 
-        self.targetSpecies:int = 10
+        #self.targetSpecies:int = 10
         self.protectedSpecies:int = 5
 
-        self.compatibilityModifier:float = 0.01;#0.01;
-        self.compatibilityThreshold:float = 2
+        #self.compatibilityModifier:float = 0.01;#0.01;
+        self.compatibilityThreshold:float = 3
 
         self.genscoresHistor_max:List[float] = []#[0 for i in range(1000)];
         self.genscoresHistor_cur:List[float] = []#[0 for i in range(100)];
@@ -85,10 +85,11 @@ class Population:
 
 
     def setBestMeeple(self):
-        if self.bestMeeple:
-            maxFit = self.highestFitness
-        else:
-            maxFit = 0
+        #if self.bestMeeple:
+        #    maxFit = self.highestFitness
+        #else:
+        #    maxFit = 0
+        maxFit = 0
 
         #go through all meeples in the population and test if their fitness is higher than the previous one
         for meepi in range(self.size):
@@ -144,7 +145,7 @@ class Population:
                                                   len(self.species)) )
         log.logger.info("\tID\tmeeps\tstale\tmax fit\t avg. fit")
         for i in range(len(id_s)):
-            log.logger.info("\t%d\t%d\t%d\t%.3f\t%.3f"%id_s[i])
+            log.logger.info("\t%d\t%d\t\t%d\t%.3f\t%.3f"%id_s[i])
 
         log.logger.info("highest score %.4f" % self.highestScore)
         log.logger.info("highest fitness %.4f" % self.highestFitness)
@@ -213,13 +214,13 @@ class Population:
                 self.species.append(Species(meep=meep, speciesID=self.nextSpeciesID))
                 self.nextSpeciesID+=1
 
-        if len(self.species) > self.targetSpecies:
-            self.compatibilityThreshold+=self.compatibilityModifier;
-        elif  len(self.species) < self.targetSpecies:
-            self.compatibilityThreshold-=self.compatibilityModifier;
-        else:
-            pass;
-        self.compatibilityThreshold = min( 4,max([self.compatibilityThreshold, 1]));
+        #if len(self.species) > self.targetSpecies:
+        #    self.compatibilityThreshold+=self.compatibilityModifier;
+        #elif  len(self.species) < self.targetSpecies:
+        #    self.compatibilityThreshold-=self.compatibilityModifier;
+        #else:
+        #    pass;
+        #self.compatibilityThreshold = min( 4,max([self.compatibilityThreshold, 1]));
 
         log.logger.info("Added %d new species with compatibilityThreshold %.1f" % (len(self.species)-temp,self.compatibilityThreshold));
 
@@ -281,7 +282,7 @@ class Population:
     def fitnessSharing_Tax(self)->None:
         # Takes n% of all fitness in the species, and then returns it from the sum divided equally
         fitnessTaxSum = 0
-        fitnessTaxRate = 0.1
+        fitnessTaxRate = 0.05
         # Take n% of meeps' fitness and add to sum
         for meep in self.meeples:
             fitnessTaxSum += meep.fitness * fitnessTaxRate

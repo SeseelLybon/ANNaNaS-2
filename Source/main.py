@@ -32,7 +32,7 @@ class availgames(Enum):
     acrobat = auto();
 
 
-game:availgames = availgames.tictactoe;
+game:availgames = availgames.cartpolenorm;
 
 inputlabels:List[str] = [];
 outputlabels:List[str] = [];
