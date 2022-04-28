@@ -50,14 +50,10 @@ class Node:
         #    return False
 
         if node.layer < self.layer:
-            for nodei in range(len(node.outputConnections)):
-                if node.outputConnections[nodei].toNode == self:
+            for nodes in node.outputConnections:
+                if (nodes.fromNode == self and nodes.toNode == node) or \
+                        (nodes.fromNode == node and nodes.toNode == self):
                     return True
-        else:
-            for nodei in range(len(self.outputConnections)):
-                if self.outputConnections[nodei].toNode == node:
-                    return True
-
         return False
 
 

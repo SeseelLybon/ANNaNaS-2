@@ -21,8 +21,8 @@ import pyglet.gl as pygl
 # NeuralNetwork = Genome
 
 
-nextConnectionID:int = 10
-nextNeuralNetworkID:int = 10
+nextConnectionID:int = 1
+nextNeuralNetworkID:int = 1
 
 import maintools
 log = maintools.colLogger("neuralnetwork")
@@ -139,10 +139,11 @@ class NeuralNetwork:
         rng.shuffle(rnglist)
         randomConnection = None
         for rngcon in rnglist:
-            if self.connections[rngcon].fromNode != self.nodes[self.biasNodeID]:
-                self.connections[rngcon].enabled = False
-                randomConnection = rngcon
-                break
+            if self.connections[rngcon].enabled:
+                if self.connections[rngcon].fromNode.ID != self.biasNodeID or self.connections[rngcon].toNode.ID != self.biasNodeID:
+                    self.connections[rngcon].enabled = False;
+                    randomConnection = rngcon;
+                    break;
 
         # there's no available connection, might as well add one
         if randomConnection is None:
@@ -223,12 +224,11 @@ class NeuralNetwork:
             log.logger.debug("Adding new Connection")
 
 
-        if self.isFullyConnected():
-            #print("addConnection failed, can't add new connection to filled network")
-            return
-        log.logger.debug("Adding new Connection")
+        #if self.isFullyConnected():
+        #    #print("addConnection failed, can't add new connection to filled network")
+        #    return
 
-        # TODO: change combinations to permutations to allow nodes to recurrent to themselves
+        # TOO: change combinations to permutations to allow nodes to recurrent to themselves
         #   This will break a ton. Also add a visual indicator for the graph
 
         # grab 2 nodes that don't have a connection
@@ -248,7 +248,6 @@ class NeuralNetwork:
                 if not self.checkIfConnected(randomNode1, randomNode2, isRecurrent):
                     break;
 
-        log.logger.debug("%s, %s : these connections were considered non-duplicate" % (randomNode1, randomNode2))
 
         #if randomNode1 == self.biasNodeID or randomNode2 == self.biasNodeID:
         #    isRecurrent = False;
@@ -264,6 +263,7 @@ class NeuralNetwork:
                 randomNode2 = randomNode1
                 randomNode1 = temp
 
+        log.logger.debug("%s, %s : these connections were considered non-duplicate" % (randomNode1, randomNode2))
 
         connectionInnovationNumber:int = self.getInnovationNumber(innovationHistory, self.nodes[randomNode1], self.nodes[randomNode2])
         self.connections.append( Connection(self.nodes[randomNode1], self.nodes[randomNode2], rng.uniform(-1,1), connectionInnovationNumber) )
@@ -275,15 +275,18 @@ class NeuralNetwork:
 
 
     def checkIfConnected(self, r1:int, r2:int, isrecurrent:bool) -> bool:
+        # if node is itself
         if self.nodes[r1].layer == self.nodes[r2].layer:
             if r1 == r2 and isrecurrent and self.nodes[r1].layer != 0 and self.nodes[r1].layer != self.layers_amount:
                 pass;
             else:
                 return True
-        if self.nodes[r1].isConnectedTo(self.nodes[r2]):
-            return True
-        if self.nodes[r2].isConnectedTo(self.nodes[r1]):
-            return True
+
+        # If node is connected one or the other way
+        for conni in range(len(self.connections)):
+            if (self.connections[conni].toNode.ID == r1 and self.connections[conni].fromNode.ID == r2) or \
+                    (self.connections[conni].toNode.ID == r2 and self.connections[conni].fromNode.ID == r1):
+                return True;
         return False
 
     def getInnovationNumber(self, innovationHistory:List[ConnectionHistory], fromNode:Node, toNode:Node)->int:
@@ -291,7 +294,7 @@ class NeuralNetwork:
         isNew:bool = True
         connectionInnovationNumber:int = nextConnectionID
 
-        # Check if tried innovation already exists, then use that innovation
+        # Check if innovation already exists, then use that innovation
         for innoi in range(len(innovationHistory)):
             if innovationHistory[innoi].matches(self, fromNode, toNode):
                 isNew = False # Not a new mutation
@@ -518,9 +521,7 @@ class NeuralNetwork:
                                                           batch=batch,
                                                           group=groupConnections));
                 else: # tonode == fromnode
-                    # TODO: when nodes can recurrent to themselves, add a small visual element
-                    #   make a circle with the correct colour of the connection
-                    # TODO: THIS. IS. GOING. TO. BREAK.
+                    # TOO: THIS. IS. GOING. TO. BREAK.
                     #   Past me; you're welcome 0/
                     #if self.connections[conni].toNode.ID == self.connections[conni].fromNode.ID:
                     outlinewidth = abs(int(self.connections[conni].weight*2));
@@ -707,19 +708,22 @@ class ConnectionHistory:
         self.fromNode:int = fromNode
         self.toNode:int = toNode
         self.innovationNumber:int = innovationNumber
-        self.innovationNumbers:List[int] = innovationNumbers.copy()
+        self.innovationNumbers:List[int] = innovationNumbers#.copy()
 
     def __repr__(self):
         return str(self.innovationNumber)
 
     def matches(self, neuralnetwork:NeuralNetwork, fromNode:Node, toNode:Node) -> bool:
+        # TODO: Still causes duplicates
+        # There are more connections than innovation numbers in a single ANN.
         if len(neuralnetwork.connections) == len(self.innovationNumbers):
             if fromNode.ID == self.fromNode and toNode.ID == self.toNode:
                 for coni in range(len(neuralnetwork.connections)):
                     if not neuralnetwork.connections[coni].innovationNumber in self.innovationNumbers:
-                        return False
-                return True
-        return False
+                        return False;
+                return True;
+            return False;
+        return False;
 
 def getDuplicateConnections(neuralnetwork:NeuralNetwork):
     existingConnections = []
@@ -742,7 +746,7 @@ class TestNeuralNetwork(unittest.TestCase):
     def setUpClass(cls) -> None:
         from logging import DEBUG
         from logging import INFO
-        log.logger.setLevel(INFO);
+        log.logger.setLevel(DEBUG);
         from numpy.random import default_rng
         #from maintools import rng
         #cls.rng = default_rng(11037)
@@ -758,11 +762,32 @@ class TestNeuralNetwork(unittest.TestCase):
         with self.subTest("basic creation"):
             testinnovationHistory = list();
             testANN = NeuralNetwork(3,3)
-            for i in range(10000):
-                testANN.mutate(testinnovationHistory);
+            #for i in range(10000):
+            #    testANN.mutate(testinnovationHistory);
+            for u in range(3):
+                for j in range(10):
+                    testANN.addConnection(testinnovationHistory);
+                for j in range(10):
+                    testANN.addNode(testinnovationHistory);
             testANN.generateNetwork();
             #testANN.printNetwork();
-            testANN.generateNetwork();
+            #testANN.generateNetwork();
+
+        with self.subTest("No duplicate connections"):
+            for con_a in testANN.connections:
+                paira = (con_a.toNode.ID, con_a.fromNode.ID);
+                #appearedoncealready = False;
+                for con_b in testANN.connections:
+                    pairb = (con_b.toNode.ID, con_b.fromNode.ID);
+                    if paira[0] == pairb[0] and paira[1] == pairb[1]:
+                        #if not appearedoncealready:
+                        with self.subTest("No duplicate connections"):
+                            if con_a.innovationNumber == con_b.innovationNumber:
+                                # this is probably itself
+                                #appearedoncealready = True;
+                                pass;
+                            else:
+                                self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],paira[1], con_a.innovationNumber, con_b.innovationNumber));
 
         with self.subTest("Feed forward w/o recurrency"):
             traindata = [[0,0,0], [1,0,0], [0,1,0], [0,0,1]];
@@ -813,21 +838,8 @@ class TestNeuralNetwork(unittest.TestCase):
             # Expecting the two values to be unequal since the recurrency must influence the second feedforward.
             self.assertFalse(errorrate1 == errorrate2);
 
-        with self.subTest("No duplicate connections"):
-            for con_a in testANN.connections:
-                paira = (con_a.toNode.ID, con_a.fromNode.ID);
-                #appearedoncealready = False;
-                for con_b in testANN.connections:
-                    pairb = (con_b.toNode.ID, con_b.fromNode.ID);
-                    if paira[0] == pairb[0] and paira[1] == pairb[1]:
-                        #if not appearedoncealready:
-                        with self.subTest("No duplicate connections"):
-                            if (con_a.enabled and con_b.enabled) and con_a.innovationNumber == con_b.innovationNumber:
-                                # this is probably itself
-                                appearedoncealready = True;
-                            else:
-                                self.assertTrue(False,"Found duplicate: %d:%d %d:%d"%(paira[0],pairb[1], con_a.innovationNumber, con_b.innovationNumber));
 
+        return;
 
     @unittest.skip("not testing test_Graphics, test expensive")
     def test_Graphics(self):

@@ -147,8 +147,8 @@ class Population:
         for i in range(len(id_s)):
             log.logger.info("\t%d\t%d\t\t%d\t%.3f\t%.3f"%id_s[i])
 
-        log.logger.info("highest score %.4f" % self.highestScore)
-        log.logger.info("highest fitness %.4f" % self.highestFitness)
+        log.logger.info("highest score %.4f %.4f" % (self.bestMeeple.score, self.highestScore))
+        log.logger.info("highest fitness %.4f %.4f" % (self.bestMeeple.fitness, self.highestFitness))
         log.logger.info("Meep1: %.1f %.3f" %
                         (self.bestMeeple.elo.rating, self.bestMeeple.elo.uncertainty))
 
@@ -390,7 +390,7 @@ class Population:
 
     def population_dump(self)->None:
         # Note to self; not using serpent because of cirular dependancy. No idea how to solve it.
-        # TODO: Uses too much space when dumping
+        # TOO: Uses too much space when dumping
 
         import jsonpickle
         import jsonpickle.ext.numpy as jsonpickle_numpy
