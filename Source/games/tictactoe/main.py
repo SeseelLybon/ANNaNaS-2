@@ -41,13 +41,10 @@ def tictactoeMain(population:Population):
         #    pop.pop.sort(key=lambda meep: meep.elo.rating, reverse=True)
 
 
-
 def cell_test3(meepi:int, population:Population):
     meep = population.meeples[meepi]
 
     for board in combinations([0,0,0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2], 9):
-        #board = list(rng.integers(0,3, [9])); # create a random board
-        #board[rng.integers(0,9)] = 0; # set a spot to 0 so it can always move
         if 0 not in board or checkWinner(board): # check if it's a valid board (nobody won yet):
             continue;
 
@@ -59,7 +56,7 @@ def cell_test3(meepi:int, population:Population):
         if board[index] == 0:
             meep.score += 9-sum(board_free)
         else:
-            meep.score -= 1
+            meep.score -= 0
 
 def cell_test2(meepi:int, population:Population) -> bool:
     meep = population.meeples[meepi]

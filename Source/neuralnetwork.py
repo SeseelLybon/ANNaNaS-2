@@ -395,7 +395,7 @@ class NeuralNetwork:
             if parent2connection != -1:
                 if (not self.connections[conni].enabled) or (not parent2.connections[parent2connection].enabled):
                     if rng.uniform() < 0.75:
-                        setEnabled= False
+                        setEnabled = False
                 if rng.uniform() <0.5:
                     childConnections.append(self.connections[conni])
                 else:
@@ -853,7 +853,35 @@ class TestNeuralNetwork(unittest.TestCase):
             # Expecting the two values to be unequal since the recurrency must influence the second feedforward.
             self.assertFalse(errorrate1 == errorrate2);
 
+        with self.subTest("crossover"):
+            testANN2 = NeuralNetwork(3,3)
+            #for i in range(10000):
+            #    testANN.mutate(testinnovationHistory);
+            for u in range(10):
+                for j in range(10):
+                    testANN.addConnection(testinnovationHistory);
+                for j in range(10):
+                    testANN.addNode(testinnovationHistory);
+            testANN2.generateNetwork();
+            testANN3 = testANN.crossover(testANN2);
 
+        with self.subTest("No duplicate connections in croosover"):
+            for con_a in testANN3.connections:
+                paira = (con_a.toNode.ID, con_a.fromNode.ID);
+                # appearedoncealready = False;
+                for con_b in testANN3.connections:
+                    pairb = (con_b.toNode.ID, con_b.fromNode.ID);
+                    if paira[0] == pairb[0] and paira[1] == pairb[1]:
+                        # if not appearedoncealready:
+                        with self.subTest("No duplicate connections"):
+                            if not (
+                                    con_a.enabled and con_b.enabled) or con_a.innovationNumber == con_b.innovationNumber:
+                                # this is probably itself
+                                # appearedoncealready = True;
+                                pass;
+                            else:
+                                self.assertTrue(False, "Found duplicate: %d:%d %d:%d" % (
+                                paira[1], paira[0], con_a.innovationNumber, con_b.innovationNumber));
         return;
 
     @unittest.skip("not testing test_Graphics, test expensive")

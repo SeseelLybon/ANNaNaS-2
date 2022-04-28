@@ -32,14 +32,14 @@ class availgames(Enum):
     acrobat = auto();
 
 
-game:availgames = availgames.cartpolenorm;
+game:availgames = availgames.tictactoe;
 
 inputlabels:List[str] = [];
 outputlabels:List[str] = [];
 
 if game == availgames.tictactoe:
     from games.tictactoe.main import tictactoeMain
-    popcap = 1000
+    popcap = 100
     #population = Population(popcap, 11, 9) # tictactoe compatible population
     population = Population(popcap, 9, 9) # tictactoe compatible population
     playgame = tictactoeMain;
