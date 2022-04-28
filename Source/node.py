@@ -38,23 +38,23 @@ class Node:
 
 
 
-    def isConnectedTo(self, node: Node) -> bool:
-        """Tests connection between self and node
-
-        Args:
-            node (Node): Node to check connection to
-        Returns:
-            bool: True if connected
-        """
-        #if node.layer == self.layer:
-        #    return False
-
-        if node.layer < self.layer:
-            for nodes in node.outputConnections:
-                if (nodes.fromNode == self and nodes.toNode == node) or \
-                        (nodes.fromNode == node and nodes.toNode == self):
-                    return True
-        return False
+    #def isConnectedTo(self, node: Node) -> bool:
+    #    """Tests connection between self and node
+    #
+    #    Args:
+    #        node (Node): Node to check connection to
+    #    Returns:
+    #        bool: True if connected
+    #    """
+    #    #if node.layer == self.layer:
+    #    #    return False
+    #
+    #    if node.layer < self.layer:
+    #        for nodes in node.outputConnections:
+    #            if (nodes.fromNode == self and nodes.toNode == node) or \
+    #                    (nodes.fromNode == node and nodes.toNode == self):
+    #                return True
+    #    return False
 
 
     def clone(self) -> Node:
